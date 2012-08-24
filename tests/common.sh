@@ -57,7 +57,7 @@ compile_app() {
     local app="$2"
     local libs="$3"
 
-    scp "apps/$app.c" "root@$node:$test_apps_dir"
+    scp "../apps/$app.c" "root@$node:$test_apps_dir"
     run "$node" "cc $test_apps_dir/$app.c $libs -o $test_apps_dir/$app"
 }
 
@@ -76,7 +76,7 @@ configure_corosync() {
     if run "$node" "[ -f /etc/corosync/corosync.conf ]";then
 	run "$node" "mv /etc/corosync/corosync.conf $test_var_dir/corosync.conf.bck"
     fi
-    sed 'configs/corosync.conf.example' -e 's/bindnetaddr:.*$/bindnetaddr: '$node'/' \
+    sed '../configs/corosync.conf.example' -e 's/bindnetaddr:.*$/bindnetaddr: '$node'/' \
       -e 's/mcastaddr:.*$/mcastaddr: '$mcast_addr'/' | run "$node" 'cat > /etc/corosync/corosync.conf'
 }
 
@@ -109,6 +109,9 @@ exit_trap() {
 	if run "$i" "[ -f /var/run/corosync.pid ]";then
 	    stop_corosync "$i"
 	fi
+	if run "$node" "[ -f $test_var_dir/corosync.conf.bck ]";then
+	run "$node" "mv $test_var_dir/corosync.conf.bck /etc/corosync/corosync.conf"
+    fi
     done
     pkill -P $test_pid
 }
