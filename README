@@ -1,0 +1,12 @@
+Corosync Shell Test Suite
+-------------------------
+
+Simpler version of full CTS for regression tests of corosync.
+
+License
+-------
+See COPYING file for license (ISC)
+
+Author
+------
+Jan Friesse <jfriesse@redhat.com>

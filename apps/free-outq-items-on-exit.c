@@ -57,6 +57,7 @@ int main (int argc, char *argv[]) {
 	int i;
 	struct iovec iov;
 	int no_msgs = 300000;
+	char str[255];
 
 	strcpy(group_name.value, "GROUP");
 	group_name.length = 6;
@@ -75,14 +76,26 @@ int main (int argc, char *argv[]) {
 	    }
 	} while (result != CS_OK);
 
-	iov.iov_base = (char *)"lgstrlongstrlongstrlongstrlongstrlongstrlongstrlongstrlongstrlongstrlongs"
-	    "trlongstrlongstrlongstrlongstr";
-	iov.iov_len = strlen(iov.iov_base)+1;
 
 	for (i = 1; i < no_msgs; i++) {
-		cpg_mcast_joined(handle, CPG_TYPE_AGREED, &iov, 1);
+		snprintf(str, sizeof(str), "longstrlongstrlongstrlongstrlongstrlongstrlongstrlongstrlongstrlongstr"
+		    "longstrlongstrlongstr %u", i);
+		iov.iov_base = str;
+		iov.iov_len = strlen(iov.iov_base) + 1;
+		result = cpg_mcast_joined(handle, CPG_TYPE_AGREED, &iov, 1);
+
+		if (result == CS_ERR_TRY_AGAIN) i--;
+
+		if (((i * 700) % no_msgs) == 0) {
+			printf(".");
+			fflush(stdout);
+			if (((i * 10) % no_msgs) == 0) {
+				printf(" %u %%\n", ((i * 100) / no_msgs));
+			}
+		}
 	}
 
+	printf(" %u %%\n", 100);
 	result = cpg_finalize (handle);
 	return (0);
 }

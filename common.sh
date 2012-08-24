@@ -22,13 +22,27 @@ set_no_nodes() {
     done
 }
 
+resolve_ip() {
+    ping -q -c 1 -t 1 "$1" | grep PING | sed -e "s/.* (//" | sed -e "s/).*//"
+}
+
+resolve_nodes_ip() {
+    nodes_ip=""
+    for i in $nodes;do
+	ip=`resolve_ip $i`
+	[ "$ip" == "" ] && exit 1
+	[ "$nodes_ip" != "" ] && nodes_ip="$nodes_ip "
+	nodes_ip="$nodes_ip$ip"
+    done
+}
+
 err() {
     echo "$*" >&2
 }
 
-prepare_apps_dir() {
+prepare_node_dirs() {
     for i in $nodes;do
-        ssh "$i" "mkdir -p $test_apps_dir"
+        ssh "$i" "mkdir -p $test_apps_dir $test_var_dir"
     done
 }
 
@@ -56,11 +70,56 @@ run_app() {
     run "$node" "cd $test_apps_dir; ./$app $params"
 }
 
+configure_corosync() {
+    local node="$1"
+
+    if run "$node" "[ -f /etc/corosync/corosync.conf ]";then
+	run "$node" "mv /etc/corosync/corosync.conf $test_var_dir/corosync.conf.bck"
+    fi
+    sed 'configs/corosync.conf.example' -e 's/bindnetaddr:.*$/bindnetaddr: '$node'/' \
+      -e 's/mcastaddr:.*$/mcastaddr: '$mcast_addr'/' | run "$node" 'cat > /etc/corosync/corosync.conf'
+}
+
+start_corosync() {
+    local node="$1"
+
+    run "$node" "corosync"
+
+    if ! run "$node" 'corosync-cfgtool -s > /dev/null 2>&1'; then
+        sleep 0.5
+    fi
+}
+
+stop_corosync() {
+    local node="$1"
+
+    run "$node" 'kill -INT `cat /var/run/corosync.pid`'
+}
+
+corosync_mem_used() {
+    local node="$1"
+
+    run "$node" 'ps -o rss -p `cat /var/run/corosync.pid` | sed -n 2p'
+}
+
+exit_trap() {
+    [ "$alarm_pid" != "" ] && kill -INT $alarm_pid
+
+    for i in $nodes_ip;do
+	if run "$i" "[ -f /var/run/corosync.pid ]";then
+	    stop_corosync "$i"
+	fi
+    done
+    pkill -P $test_pid
+}
+
 test_required_nodes=${test_required_nodes:-1}
 test_max_nodes=${test_max_nodes:-1}
 test_max_runtime=${test_max_runtime:-300}
 test_description=${test_description:-Test has no description}
 test_apps_dir="~/csts-apps"
+test_var_dir="/var/csts"
+corosync_running=0
 
 while getopts "hn:" optflag; do
     case "$optflag" in
@@ -89,6 +148,18 @@ if [ "$test_max_nodes" != -1 ] && [ "$no_nodes" -gt "$test_max_nodes" ];then
     usage
 fi
 
-prepare_apps_dir
+resolve_nodes_ip
+
+master_node=`echo $nodes_ip | cut -d ' ' -f 1`
+mcast_addr="239.255."`echo $master_node | cut -d '.' -f 3-4`
+test_pid=$$
+
+prepare_node_dirs
+
+trap 'exit_trap' EXIT
+
+# Start alarm
+(sleep $test_max_runtime; err "Test took too long"; while true;do kill -ALRM $test_pid; sleep 10;done) &
+alarm_pid=$!
 
 set -x -e
