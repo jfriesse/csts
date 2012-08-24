@@ -1,10 +1,8 @@
 #!/bin/bash
 #
-# Test that outq items are freed on exit of IPC connection.
-#
 # Author: Jan Friesse <jfriesse@redhat.com>
 #
 
-. common.sh
+test_description="Test that outq items are freed on exit of IPC connection."
 
-echo "$no_nodes"
+. common.sh
