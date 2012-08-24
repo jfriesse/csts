@@ -48,6 +48,7 @@ prepare_node_dirs() {
 
 run() {
     local node="$1"
+
     shift
     ssh "$node" "$*"
 }
@@ -70,19 +71,25 @@ run_app() {
     run "$node" "cd $test_apps_dir; ./$app $params"
 }
 
+change_corosync_conf() {
+    cat
+}
+
 configure_corosync() {
     local node="$1"
 
     if run "$node" "[ -f /etc/corosync/corosync.conf ]";then
 	run "$node" "mv /etc/corosync/corosync.conf $test_var_dir/corosync.conf.bck"
     fi
-    sed '../configs/corosync.conf.example' -e 's/bindnetaddr:.*$/bindnetaddr: '$node'/' \
-      -e 's/mcastaddr:.*$/mcastaddr: '$mcast_addr'/' | run "$node" 'cat > /etc/corosync/corosync.conf'
+    sed '../configs/corosync.conf.example' -e 's/^[ \t]*bindnetaddr:.*$/    bindnetaddr: '$node'/' \
+      -e 's/^[ \t]*mcastaddr:.*$/    mcastaddr: '$mcast_addr'/' | change_corosync_conf | \
+      run "$node" 'tee /var/csts/corosync.conf.used > /etc/corosync/corosync.conf'
 }
 
 start_corosync() {
     local node="$1"
 
+    run "$node" 'echo --- MARKER --- '$0' at `date +"%F-%T"` --- MARKER --- >> /var/log/cluster/corosync.log'
     run "$node" "corosync"
 
     if ! run "$node" 'corosync-cfgtool -s > /dev/null 2>&1'; then
@@ -109,11 +116,18 @@ exit_trap() {
 	if run "$i" "[ -f /var/run/corosync.pid ]";then
 	    stop_corosync "$i"
 	fi
-	if run "$node" "[ -f $test_var_dir/corosync.conf.bck ]";then
-	run "$node" "mv $test_var_dir/corosync.conf.bck /etc/corosync/corosync.conf"
-    fi
+	if run "$i" "[ -f $test_var_dir/corosync.conf.bck ]";then
+	    run "$i" "mv -f $test_var_dir/corosync.conf.bck /etc/corosync/corosync.conf"
+	fi
     done
     pkill -P $test_pid
+}
+
+cat_corosync_log() {
+    local node="$1"
+
+    run "$node" 'tac /var/log/cluster/corosync.log | sed -n -e "0,/^--- MARKER --- .* --- MARKER ---$/p" | tac |' \
+	'sed 1d'
 }
 
 test_required_nodes=${test_required_nodes:-1}
