@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# Author: Jan Friesse <jfriesse@redhat.com>
+#
 
 set -x -e
 
