@@ -71,19 +71,31 @@ run_app() {
     run "$node" "cd $test_apps_dir; ./$app $params"
 }
 
-change_corosync_conf() {
+generate_corosync_conf_cb() {
     cat
 }
 
+# generate_corosync_conf node, [callback]
+generate_corosync_conf() {
+    local node="$1"
+    local cb=generate_corosync_conf_cb
+
+    [ "$2" != "" ] && cb="$2"
+
+    sed '../configs/corosync.conf.example' -e 's/^[ \t]*bindnetaddr:.*$/    bindnetaddr: '$node'/' \
+      -e 's/^[ \t]*mcastaddr:.*$/    mcastaddr: '$mcast_addr'/' | $cb | \
+      run "$node" 'tee /var/csts/corosync.conf.used > /etc/corosync/corosync.conf'
+}
+
+# configure_corosync node, [callback]
 configure_corosync() {
     local node="$1"
 
     if run "$node" "[ -f /etc/corosync/corosync.conf ]";then
 	run "$node" "mv /etc/corosync/corosync.conf $test_var_dir/corosync.conf.bck"
     fi
-    sed '../configs/corosync.conf.example' -e 's/^[ \t]*bindnetaddr:.*$/    bindnetaddr: '$node'/' \
-      -e 's/^[ \t]*mcastaddr:.*$/    mcastaddr: '$mcast_addr'/' | change_corosync_conf | \
-      run "$node" 'tee /var/csts/corosync.conf.used > /etc/corosync/corosync.conf'
+
+    generate_corosync_conf "$node" "$2"
 }
 
 start_corosync() {

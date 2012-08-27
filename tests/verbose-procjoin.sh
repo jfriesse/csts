@@ -7,7 +7,7 @@ test_description="Test that procjoin messages contains pid"
 
 . common.sh
 
-change_corosync_conf() {
+generate_corosync_conf_cb() {
     sed 's/^[ \t]*debug: .*$/debug: on/'
 }
 
@@ -17,6 +17,6 @@ configure_corosync "$nodes_ip"
 start_corosync "$nodes_ip"
 
 echo "EXIT" | run_app "$nodes" 'testcpg' > /dev/null
-cat_corosync_log "$nodes_ip" | grep 'got procjoin message from cluster node .* for pid .*' || exit 1
+cat_corosync_log "$nodes_ip" | grep 'got procjoin message from cluster node .* for pid .*'
 
 exit 0
