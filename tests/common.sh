@@ -100,13 +100,17 @@ configure_corosync() {
 
 start_corosync() {
     local node="$1"
+    local no_retries=0
 
     run "$node" 'echo --- MARKER --- '$0' at `date +"%F-%T"` --- MARKER --- >> /var/log/cluster/corosync.log'
     run "$node" "corosync" || return $?
 
-    if ! run "$node" 'corosync-cfgtool -s > /dev/null 2>&1'; then
+    while ! run "$node" 'corosync-cfgtool -s > /dev/null 2>&1' && [ $no_retries -lt 20 ]; do
         sleep 0.5
-    fi
+        no_retries=$(($no_retries + 1))
+    done
+
+    [ "$no_retries" -lt 20 ] && return 0 || return 1
 }
 
 stop_corosync() {
