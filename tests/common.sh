@@ -102,7 +102,7 @@ start_corosync() {
     local node="$1"
 
     run "$node" 'echo --- MARKER --- '$0' at `date +"%F-%T"` --- MARKER --- >> /var/log/cluster/corosync.log'
-    run "$node" "corosync"
+    run "$node" "corosync" || return $?
 
     if ! run "$node" 'corosync-cfgtool -s > /dev/null 2>&1'; then
         sleep 0.5
