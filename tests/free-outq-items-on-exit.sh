@@ -14,11 +14,11 @@ compile_app "$nodes_ip" "free-outq-items-on-exit" "-lcpg"
 configure_corosync "$nodes_ip"
 start_corosync "$nodes_ip"
 
-run_app "$nodes" "free-outq-items-on-exit"
+run_app "$nodes_ip" "free-outq-items-on-exit"
 
 mem_used_start=`corosync_mem_used "$nodes_ip"`
 for i in `seq 1 2`;do
-    run_app "$nodes" "free-outq-items-on-exit"
+    run_app "$nodes_ip" "free-outq-items-on-exit"
 done
 mem_used_end=`corosync_mem_used "$nodes_ip"`
 
