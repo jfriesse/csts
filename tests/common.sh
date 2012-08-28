@@ -146,6 +146,20 @@ cat_corosync_log() {
 	'sed 1d'
 }
 
+cmap_set() {
+    local node="$1"
+    local key="$2"
+    local type="$3"
+    local value="$4"
+
+    if ! run "$node" "which corosync-cmapctl";then
+	# Use corosync-objctl
+	run "$node" "corosync-objctl -w $key=$value"
+    else
+	run "$node" "corosync-cmapctl -s $key $type $value"
+    fi
+}
+
 test_required_nodes=${test_required_nodes:-1}
 test_max_nodes=${test_max_nodes:-1}
 test_max_runtime=${test_max_runtime:-300}
