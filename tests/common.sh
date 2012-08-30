@@ -147,8 +147,18 @@ corosync_mem_used() {
     run "$node" 'ps -o rss -p `cat /var/run/corosync.pid` | sed -n 2p'
 }
 
+exit_trap_start_cb() {
+    return 0
+}
+
+exit_trap_end_cb() {
+    return 0
+}
+
 exit_trap() {
     [ "$alarm_pid" != "" ] && kill -INT $alarm_pid
+
+    exit_trap_start_cb
 
     for i in $nodes_ip;do
 	if run "$i" "[ -f /var/run/corosync.pid ]";then
@@ -158,6 +168,9 @@ exit_trap() {
 	    run "$i" "mv -f $test_var_dir/corosync.conf.bck /etc/corosync/corosync.conf"
 	fi
     done
+
+    exit_trap_end_cb
+
     pkill -P $test_pid
 }
 
