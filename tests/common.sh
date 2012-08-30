@@ -115,8 +115,22 @@ start_corosync() {
 
 stop_corosync() {
     local node="$1"
+    local no_retries=0
 
     run "$node" 'kill -INT `cat /var/run/corosync.pid`'
+
+    while ! cat_corosync_log "$node" | grep 'Corosync Cluster Engine exiting' && [ $no_retries -lt 20 ];do
+	sleep 1
+	no_retries=$(($no_retries + 1))
+    done
+
+    [ "$no_retries" -lt 20 ] && return 0 || return 1
+}
+
+kill_corosync() {
+    local node="$1"
+
+    run "$node" 'killall -9 corosync'
 }
 
 corosync_mem_used() {
@@ -130,7 +144,7 @@ exit_trap() {
 
     for i in $nodes_ip;do
 	if run "$i" "[ -f /var/run/corosync.pid ]";then
-	    stop_corosync "$i"
+	    stop_corosync "$i" || kill_corosync "$i"
 	fi
 	if run "$i" "[ -f $test_var_dir/corosync.conf.bck ]";then
 	    run "$i" "mv -f $test_var_dir/corosync.conf.bck /etc/corosync/corosync.conf"
