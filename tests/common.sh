@@ -42,7 +42,7 @@ err() {
 
 prepare_node_dirs() {
     for i in $nodes;do
-        ssh "$i" "mkdir -p $test_apps_dir $test_var_dir"
+        ssh "root@$i" "mkdir -p $test_apps_dir $test_var_dir"
     done
 }
 
@@ -50,7 +50,7 @@ run() {
     local node="$1"
 
     shift
-    ssh "$node" "$*"
+    ssh "root@$node" "$*"
 }
 
 compile_app() {
@@ -157,6 +157,18 @@ cmap_set() {
 	run "$node" "corosync-objctl -w $key=$value"
     else
 	run "$node" "corosync-cmapctl -s $key $type $value"
+    fi
+}
+
+cmap_get() {
+    local node="$1"
+    local key="$2"
+
+    if ! run "$node" "which corosync-cmapctl";then
+	# Use corosync-objctl
+	run "$node" "corosync-objctl -a | grep '^$key=' | sed 's/^.*=//'"
+    else
+	run "$node" "corosync-cmapctl $key | sed 's/^.* = //'"
     fi
 }
 
