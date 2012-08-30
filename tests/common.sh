@@ -53,6 +53,14 @@ run() {
     ssh "root@$node" "$*"
 }
 
+run_as() {
+    local node="$1"
+    local user="$2"
+
+    shift 2
+    run "$node" "su -s /bin/bash - $user -c '$*'"
+}
+
 compile_app() {
     local node="$1"
     local app="$2"
