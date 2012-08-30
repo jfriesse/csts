@@ -8,9 +8,19 @@ set -e
 usage() {
     echo "$0 options"
     echo "$test_description"
+    echo -n "This test needs "
+    if [ $test_required_nodes == $test_max_nodes ];then
+	echo -n "exactly $test_required_nodes"
+    elif [ "$test_max_nodes" != -1 ];then
+	echo -n "from $test_required_nodes up to $test_max_nodes"
+    else
+	echo -n "at least $test_required_nodes"
+    fi
+    echo " node(s) specified"
     echo ""
     echo "Options:"
     echo "  -n              space separated nodes where test is executed"
+    echo "  -i              print parseable test informations"
 
     exit 1
 }
@@ -215,7 +225,7 @@ test_apps_dir="~/csts-apps"
 test_var_dir="/var/csts"
 corosync_running=0
 
-while getopts "hn:" optflag; do
+while getopts "hin:" optflag; do
     case "$optflag" in
     h)
         usage
@@ -223,6 +233,13 @@ while getopts "hn:" optflag; do
     n)
         nodes="$OPTARG"
         ;;
+    i)
+	echo "test_required_nodes=$test_required_nodes"
+	echo "test_max_nodes=$test_max_nodes"
+	echo "test_max_runtime=$test_max_runtime"
+	echo "test_description=$test_description"
+	exit 0
+	;;
     \?|:)
         usage
         ;;
