@@ -8,6 +8,7 @@ usage() {
     echo ""
     echo "Options:"
     echo "  -n              space separated nodes where test is executed"
+    echo "  -l logfile      write complete log to given logfile (stdout by default)"
 
     exit 1
 }
@@ -145,7 +146,9 @@ init_test_nodes_pid() {
     done
 }
 
-while getopts "hin:" optflag; do
+logfile="/dev/stdout"
+
+while getopts "hil:n:" optflag; do
     case "$optflag" in
     h)
 	usage
@@ -153,6 +156,9 @@ while getopts "hin:" optflag; do
     n)
         nodes="$OPTARG"
         ;;
+    l)
+	logfile="$OPTARG"
+	;;
     \?|:)
 	usage
         ;;
@@ -201,7 +207,7 @@ popd &>/dev/null
 echo
 echo "FAILED: $no_failed, pass: $no_pass, total: $(($no_pass + $no_failed))"
 echo
-cat $complete_test_out
+cat $complete_test_out > $logfile
 rm -f $complete_test_out
 
 [ "$no_failed" == 0 ]
