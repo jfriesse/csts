@@ -22,6 +22,6 @@ for i in `seq 1 2`;do
 done
 mem_used_end=`corosync_mem_used "$nodes_ip"`
 
-[ $mem_used_end -gt $(($mem_used_start / 10 + $mem_used_start)) ] && exit 1
+[ $mem_used_end -gt $(($mem_used_start / 5 + $mem_used_start)) ] && exit 1
 
 exit 0
