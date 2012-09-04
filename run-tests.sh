@@ -203,3 +203,5 @@ echo "FAILED: $no_failed, pass: $no_pass, total: $(($no_pass + $no_failed))"
 echo
 cat $complete_test_out
 rm -f $complete_test_out
+
+[ "$no_failed" == 0 ]
