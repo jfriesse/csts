@@ -96,6 +96,14 @@ int main (int argc, char *argv[]) {
 	}
 
 	printf(" %u %%\n", 100);
+	fflush(stdout);
+	if ((argc > 1) && (strcmp(argv[1], "-w") == 0)) {
+		do {
+			printf("Enter EXIT to exit\n");
+			fflush(stdout);
+			fgets(str, sizeof(str), stdin);
+		} while (strncmp(str, "EXIT", 4) != 0);
+	}
 	result = cpg_finalize (handle);
 	return (0);
 }

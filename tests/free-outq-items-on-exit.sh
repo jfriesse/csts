@@ -14,14 +14,28 @@ compile_app "$nodes_ip" "free-outq-items-on-exit" "-lcpg"
 configure_corosync "$nodes_ip"
 start_corosync "$nodes_ip"
 
-run_app "$nodes_ip" "free-outq-items-on-exit"
+coproc run1 {
+    run_app "$nodes_ip" "free-outq-items-on-exit" "-w"
+}
 
-mem_used_start=`corosync_mem_used "$nodes_ip"`
+run1_manage() {
+    while read -u ${run1[0]} line;do
+	if echo "$line" | grep 'EXIT' &>/dev/null;then
+	    mem_used_start=`corosync_mem_used "$nodes_ip"`
+	    echo "EXIT" >&${run1[1]}
+	    wait $run1_PID
+	    return $?
+	fi
+    done
+}
+
+run1_manage
+
 for i in `seq 1 2`;do
     run_app "$nodes_ip" "free-outq-items-on-exit"
 done
 mem_used_end=`corosync_mem_used "$nodes_ip"`
 
-[ $mem_used_end -gt $(($mem_used_start / 5 + $mem_used_start)) ] && exit 1
+[ $mem_used_end -gt $(($mem_used_start / 10 + $mem_used_start)) ] && exit 1
 
 exit 0
