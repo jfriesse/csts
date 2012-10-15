@@ -180,12 +180,19 @@ declare -a test_nodes_test_name
 complete_test_out=`mktemp`
 no_failed=0
 no_pass=0
+no_skipped=0
 
 pushd tests &>/dev/null
 
 for test_exec in *.sh;do
     [ ! -x "$test_exec" ] && continue
     nodes_needed=`./$test_exec -i | grep test_required_nodes | cut -d '=' -f 2-`
+
+    if [ "$nodes_needed" -gt "$no_nodes" ];then
+	echo "skipped $test_exec"
+	no_skipped=$(($no_skipped + 1))
+	continue
+    fi
 
     free_nodes=""
     while [ "$free_nodes" == "" ];do
@@ -205,7 +212,7 @@ wait_for_all_tests
 popd &>/dev/null
 
 echo
-echo "FAILED: $no_failed, pass: $no_pass, total: $(($no_pass + $no_failed))"
+echo "FAILED: $no_failed, pass: $no_pass, skipped: $no_skipped, total: $(($no_pass + $no_failed))"
 echo
 cat $complete_test_out > $logfile
 rm -f $complete_test_out
