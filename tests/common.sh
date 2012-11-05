@@ -124,8 +124,9 @@ start_corosync() {
     run "$node" 'echo --- MARKER --- '$0' at `date +"%F-%T"` --- MARKER --- >> /var/log/cluster/corosync.log'
     run "$node" "corosync" || return $?
 
+# Doesn't work for flatiron
 #    probe_command='corosync-cfgtool -s > /dev/null 2>&1'
-    probe_command='corosync-cpgtool'
+    probe_command='corosync-cpgtool > /dev/null 2>&1'
 
     while ! run "$node" "$probe_command" && [ $no_retries -lt 20 ]; do
         sleep 0.5
