@@ -172,7 +172,7 @@ exit_trap() {
 
     for i in $nodes_ip;do
 	if run "$i" "[ -f /var/run/corosync.pid ]";then
-	    stop_corosync "$i" || kill_corosync "$i"
+	    stop_corosync "$i" || kill_corosync "$i" || true
 	fi
 	if run "$i" "[ -f $test_var_dir/corosync.conf.bck ]";then
 	    run "$i" "mv -f $test_var_dir/corosync.conf.bck /etc/corosync/corosync.conf"
