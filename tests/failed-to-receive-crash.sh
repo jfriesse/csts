@@ -46,7 +46,4 @@ run "$node_a" "iptables -A INPUT ! -i lo -p udp ! --sport domain -j DROP"
 [ "`run $node_a 'pidof corosync'`" == "`run $node_a 'cat /var/run/corosync.pid'`" ] && \
     [ "`run $node_b 'pidof corosync'`" == "`run $node_b 'cat /var/run/corosync.pid'`" ]
 
-stop_corosync "$node_a"
-stop_corosync "$node_b"
-
 exit 0
