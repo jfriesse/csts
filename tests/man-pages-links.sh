@@ -46,7 +46,6 @@ process_page() {
     already_processed_pages="$already_processed_pages $mp.$sect "
     mp_file=`run "$nodes_ip" man -w "$sect" "$mp"`
     [ "$mp_file" == "" ] && return $depth
-    echo "$mp.$sect"
 
     links=`cat_mp "$mp_file" | grep '^.BR ' | sed 's/^.BR \(.*\) (\(.*\)).*$/\1.\2/'`
     for l in $links;do
