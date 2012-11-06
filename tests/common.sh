@@ -275,7 +275,7 @@ prepare_node_dirs
 trap 'exit_trap' EXIT
 
 # Start alarm
-(sleep $test_max_runtime; err "Test took too long"; while true;do kill -ALRM $test_pid; sleep 10;done) &
+(sleep $test_max_runtime && err "Test took too long" && while true;do kill -ALRM $test_pid; sleep 10;done) &
 alarm_pid=$!
 
 set -x -e
