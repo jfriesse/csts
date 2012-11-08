@@ -12,16 +12,16 @@ cat_mp() {
     local mp="$1"
     local cat_cmd="cat"
 
-    if [ "${page_path%%*.gz}" != "$page_path" ] || [ "${page_path%%*.z}" != "$page_path" ] || \
-      [ "${page_path%%*.Z}" != "$page_path" ];then
+    if [ "${mp%*.gz}" != "$mp" ] || [ "${mp%*.z}" != "$mp" ] || \
+      [ "${mp%*.Z}" != "$mp" ];then
         cat_cmd="zcat"
     fi
 
-    if [ "${page_path%%*.bz2}" != "$page_path" ];then
+    if [ "${mp%*.bz2}" != "$mp" ];then
         cat_cmd="bzcat"
     fi
 
-    if [ "${page_path%%*.xz}" != "$page_path" ];then
+    if [ "${mp%*.xz}" != "$mp" ];then
         cat_cmd="xzcat"
     fi
 
@@ -29,6 +29,7 @@ cat_mp() {
 }
 
 alread_processed_pages=""
+ignored_pages=" logrotate.8 "
 
 process_page() {
     local mp="$1"
@@ -40,6 +41,9 @@ process_page() {
     local l
 
     if echo "$already_processed_pages" | grep " $mp.$sect " &>/dev/null;then
+        return 0
+    fi
+    if echo "$ignored_pages" | grep " $mp.$sect " &>/dev/null;then
         return 0
     fi
 
