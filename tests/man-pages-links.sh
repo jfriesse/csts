@@ -70,3 +70,5 @@ if [ "$res" -gt 1 ];then
 fi
 
 echo "Processed" `echo "$already_processed_pages" | wc -w` "pages"
+
+exit 0
