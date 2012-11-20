@@ -3,7 +3,7 @@
 # Author: Jan Friesse <jfriesse@redhat.com>
 #
 
-test_description="Test SAM -  sam_data_store, sam_data_restore and sam_data_getsize"
+test_description="Test SAM - sam_data_store, sam_data_restore and sam_data_getsize"
 
 . common.sh
 
