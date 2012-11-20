@@ -9,3 +9,5 @@ test_description="Test SAM - smoke test - restart process when it dies"
 
 compile_app "$nodes_ip" "sam-test3" "-lsam"
 run_app "$nodes_ip" 'sam-test3'
+
+exit 0

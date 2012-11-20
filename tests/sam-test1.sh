@@ -9,3 +9,5 @@ test_description="Test SAM - test recovery policy restart"
 
 compile_app "$nodes_ip" "sam-test1" "-lsam"
 run_app "$nodes_ip" 'sam-test1'
+
+exit 0

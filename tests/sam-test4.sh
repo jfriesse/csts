@@ -11,3 +11,5 @@ if run "$nodes_ip" 'grep CONFDB /usr/include/corosync/sam.h' &>/dev/null;then
     compile_app "$nodes_ip" "sam-test4" "-lsam"
     run_app "$nodes_ip" 'sam-test4'
 fi
+
+exit 0
