@@ -42,7 +42,7 @@ keys_create(cmap_handle_t handle)
 	assert(cmap_set(handle, "testobj.testkeyi16_2", &i16, sizeof(i16), CMAP_VALUETYPE_INT16) == CS_OK);
 	assert(cmap_set(handle, "testobj.testkeyi32_2", &i32, sizeof(i32), CMAP_VALUETYPE_INT32) == CS_OK);
 	assert(cmap_set(handle, "testobj.testkeyi64_2", &i64, sizeof(i64), CMAP_VALUETYPE_INT64) == CS_OK);
-	
+
 	assert(cmap_set_uint8(handle, "testobj.testkeyu8", u8) == CS_OK);
 	assert(cmap_set_uint16(handle, "testobj.testkeyu16", u16) == CS_OK);
 	assert(cmap_set_uint32(handle, "testobj.testkeyu32", u32) == CS_OK);
@@ -55,7 +55,7 @@ keys_create(cmap_handle_t handle)
 	assert(cmap_set_double(handle, "testobj.testkeydbl", dbl) == CS_OK);
 	assert(cmap_set(handle, "testobj.testkeyflt_2", &flt, sizeof(flt), CMAP_VALUETYPE_FLOAT) == CS_OK);
 	assert(cmap_set(handle, "testobj.testkeydbl_2", &dbl, sizeof(dbl), CMAP_VALUETYPE_DOUBLE) == CS_OK);
-	
+
 	assert(cmap_set_string(handle, "testobj.str", str) == CS_OK);
 	assert(cmap_set(handle, "testobj.str_2", str, strlen(str), CMAP_VALUETYPE_STRING) == CS_OK);
 
@@ -105,22 +105,22 @@ check_keys_value(cmap_handle_t handle)
 	assert(cmap_get_int8(handle, "testobj.testkeyi16_2", &i8) == CS_ERR_INVALID_PARAM);
 	assert(cmap_get_uint8(handle, "testobj.testkeyu8_2", &u8) == CS_OK);
 	assert(u8 == 99);
-	
+
 	assert(cmap_get_int16(handle, "testobj.testkeyi16_2", &i16) == CS_OK);
 	assert(i16 == 1);
 	assert(cmap_get_uint16(handle, "testobj.testkeyu16_2", &u16) == CS_OK);
 	assert(u16 == 2);
-	
+
 	assert(cmap_get_int32(handle, "testobj.testkeyi32_2", &i32) == CS_OK);
 	assert(i32 == 3);
 	assert(cmap_get_uint32(handle, "testobj.testkeyu32_2", &u32) == CS_OK);
 	assert(u32 == 4);
-	
+
 	assert(cmap_get_int64(handle, "testobj.testkeyi64_2", &i64) == CS_OK);
 	assert(i64 == 5);
 	assert(cmap_get_uint64(handle, "testobj.testkeyu64_2", &u64) == CS_OK);
 	assert(u64 == 6);
-	
+
 	assert(cmap_get_float(handle, "testobj.testkeyflt_2", &flt) == CS_OK);
 	assert(flt == 7.2f);
 	assert(cmap_get_double(handle, "testobj.testkeydbl_2", &dbl) == CS_OK);
@@ -137,7 +137,7 @@ check_keys_value(cmap_handle_t handle)
 	assert(len == sizeof(u8));
 	assert(type == CMAP_VALUETYPE_UINT8);
 	assert(memcmp(key_value, &u8, sizeof(u8)) == 0);
-	
+
 	len = sizeof(i16);
 	assert(cmap_get(handle, "testobj.testkeyi16", key_value, &len, &type) == CS_OK);
 	assert(len == sizeof(i16));
@@ -149,7 +149,7 @@ check_keys_value(cmap_handle_t handle)
 	assert(len == sizeof(u16));
 	assert(type == CMAP_VALUETYPE_UINT16);
 	assert(memcmp(key_value, &u16, sizeof(u16)) == 0);
-	
+
 	len = sizeof(i32);
 	assert(cmap_get(handle, "testobj.testkeyi32", key_value, &len, &type) == CS_OK);
 	assert(len == sizeof(i32));
@@ -161,7 +161,7 @@ check_keys_value(cmap_handle_t handle)
 	assert(len == sizeof(u32));
 	assert(type == CMAP_VALUETYPE_UINT32);
 	assert(memcmp(key_value, &u32, sizeof(u32)) == 0);
-	
+
 	len = sizeof(i64);
 	assert(cmap_get(handle, "testobj.testkeyi64", key_value, &len, &type) == CS_OK);
 	assert(len == sizeof(i64));
@@ -173,7 +173,7 @@ check_keys_value(cmap_handle_t handle)
 	assert(len == sizeof(u64));
 	assert(type == CMAP_VALUETYPE_UINT64);
 	assert(memcmp(key_value, &u64, sizeof(u64)) == 0);
-	
+
 	len = sizeof(flt);
 	assert(cmap_get(handle, "testobj.testkeyflt", key_value, &len, &type) == CS_OK);
 	assert(len == sizeof(flt));
@@ -185,7 +185,7 @@ check_keys_value(cmap_handle_t handle)
 	assert(len == sizeof(dbl));
 	assert(type == CMAP_VALUETYPE_DOUBLE);
 	assert(memcmp(key_value, &dbl, sizeof(dbl)) == 0);
-	
+
 	len = strlen(str) + 1;
 	assert(cmap_get(handle, "testobj.str", key_value, &len, &type) == CS_OK);
 	assert(len == strlen(str) + 1);
@@ -196,7 +196,7 @@ check_keys_value(cmap_handle_t handle)
 	assert(strlen(key_value2) == strlen(str));
 	assert(memcmp(key_value2, str, strlen(str)) == 0);	
 	free(key_value2);
-	
+
 	assert(cmap_get_int8(handle, "testobj.testk", &i8) == CS_ERR_NOT_EXIST);
 }
 
@@ -231,57 +231,57 @@ keys_delete(cmap_handle_t handle)
 
 	assert(cmap_delete(handle, "testobj.testkey") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkey", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
-	
+
 	assert(cmap_delete(handle, "testobj.testkeyi8") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyi8", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
 	assert(cmap_delete(handle, "testobj.testkeyu8") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyu8", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
-	
+
 	assert(cmap_delete(handle, "testobj.testkeyi16") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyi16", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
 	assert(cmap_delete(handle, "testobj.testkeyu16") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyu16", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
-	
+
 	assert(cmap_delete(handle, "testobj.testkeyi32") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyi32", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
 	assert(cmap_delete(handle, "testobj.testkeyu32") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyu32", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
-	
+
 	assert(cmap_delete(handle, "testobj.testkeyi64") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyi64", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
 	assert(cmap_delete(handle, "testobj.testkeyu64") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyu64", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
-	
+
 	assert(cmap_delete(handle, "testobj.testkeyflt") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyflt", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
 	assert(cmap_delete(handle, "testobj.testkeydbl") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeydbl", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
-	
+
 	assert(cmap_delete(handle, "testobj.testkeyi8_2") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyi8_2", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
 	assert(cmap_delete(handle, "testobj.testkeyu8_2") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyu8_2", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
-	
+
 	assert(cmap_delete(handle, "testobj.testkeyi16_2") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyi16_2", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
 	assert(cmap_delete(handle, "testobj.testkeyu16_2") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyu16_2", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
-	
+
 	assert(cmap_delete(handle, "testobj.testkeyi32_2") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyi32_2", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
 	assert(cmap_delete(handle, "testobj.testkeyu32_2") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyu32_2", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
-	
+
 	assert(cmap_delete(handle, "testobj.testkeyi64_2") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyi64_2", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
 	assert(cmap_delete(handle, "testobj.testkeyu64_2") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyu64_2", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
-	
+
 	assert(cmap_delete(handle, "testobj.testkeyflt_2") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeyflt_2", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
 	assert(cmap_delete(handle, "testobj.testkeydbl_2") == CS_OK);
 	assert(cmap_get(handle, "testobj.testkeydbl_2", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
-	
+
 	assert(cmap_delete(handle, "testobj.str_2") == CS_OK);
 	assert(cmap_get(handle, "testobj.str_2", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
 	assert(cmap_delete(handle, "testobj.str") == CS_OK);
