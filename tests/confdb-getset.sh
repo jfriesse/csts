@@ -13,6 +13,9 @@ start_corosync "$nodes_ip"
 if run "$nodes_ip" 'cat /usr/include/corosync/confdb.h' &>/dev/null;then
     compile_app "$nodes_ip" "confdb-getset" "-lconfdb"
     run_app "$nodes_ip" 'confdb-getset'
+else
+    compile_app "$nodes_ip" "cmap-getset" "-lcmap"
+    run_app "$nodes_ip" 'cmap-getset'
 fi
 
 exit 0
