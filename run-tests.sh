@@ -40,7 +40,7 @@ run_test() {
     echo "---------- $test_name on $node_names ----------"
 
     res=0
-    "./$test_name" -n "$node_names" || res=$?
+    "./$test_name" -c "$corosync_version" -n "$node_names" || res=$?
 
     echo "---------- $test_name result = $res ----------"
 
@@ -168,6 +168,11 @@ while getopts "hic:l:n:" optflag; do
         ;;
     esac
 done
+
+if [ "$corosync_version" == "" ];then
+    echo "corosync version must be specified"
+    usage
+fi
 
 if [ "$corosync_version" != "flatiron" ] && [ "$corosync_version" != "needle" ];then
     echo "Unsupported corosync version"
