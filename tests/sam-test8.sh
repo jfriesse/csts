@@ -4,15 +4,15 @@
 #
 
 test_description="Test SAM - cmap integration with quit policy"
+test_corover_flatiron_enabled=false
+test_corover_needle_enabled=true
 
 . common.sh
 
-if run "$nodes_ip" 'grep CONFDB /usr/include/corosync/sam.h' &>/dev/null;then
-    configure_corosync "$nodes_ip"
-    start_corosync "$nodes_ip"
+configure_corosync "$nodes_ip"
+start_corosync "$nodes_ip"
 
-    compile_app "$nodes_ip" "sam-test8" "-lsam -lcmap"
-    run_app "$nodes_ip" 'sam-test8'
-fi
+compile_app "$nodes_ip" "sam-test8" "-lsam -lcmap"
+run_app "$nodes_ip" 'sam-test8'
 
 exit 0

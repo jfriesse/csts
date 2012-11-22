@@ -4,12 +4,12 @@
 #
 
 test_description="Test SAM - sam_data_store, sam_data_restore and sam_data_getsize"
+test_corover_flatiron_enabled=false
+test_corover_needle_enabled=true
 
 . common.sh
 
-if run "$nodes_ip" 'grep CONFDB /usr/include/corosync/sam.h' &>/dev/null;then
-    compile_app "$nodes_ip" "sam-test4" "-lsam"
-    run_app "$nodes_ip" 'sam-test4'
-fi
+compile_app "$nodes_ip" "sam-test4" "-lsam"
+run_app "$nodes_ip" 'sam-test4'
 
 exit 0

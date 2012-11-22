@@ -4,12 +4,12 @@
 #
 
 test_description="Test SAM - warn signal set"
+test_corover_flatiron_enabled=false
+test_corover_needle_enabled=true
 
 . common.sh
 
-if run "$nodes_ip" 'grep CONFDB /usr/include/corosync/sam.h' &>/dev/null;then
-    compile_app "$nodes_ip" "sam-test6" "-lsam"
-    run_app "$nodes_ip" 'sam-test6'
-fi
+compile_app "$nodes_ip" "sam-test6" "-lsam"
+run_app "$nodes_ip" 'sam-test6'
 
 exit 0
