@@ -70,6 +70,10 @@ keys_create(cmap_handle_t handle)
 				"testtesttest.testtesttesttesttesttesttesttesttesttesttesttest", 
 				u8) == CS_ERR_NAME_TOO_LONG);
 	assert(cmap_set_int8(handle, NULL, u8) == CS_ERR_INVALID_PARAM);
+	assert(cmap_set(handle, NULL, "one", strlen("one"), CMAP_VALUETYPE_BINARY) == CS_ERR_INVALID_PARAM);
+	assert(cmap_set(handle, "", "one", strlen("one"), CMAP_VALUETYPE_BINARY) == CS_ERR_NAME_TOO_LONG);
+	assert(cmap_set(handle, "testobj.fail", NULL, 0, CMAP_VALUETYPE_BINARY) == CS_ERR_INVALID_PARAM);
+	assert(cmap_set(handle, "testobj.fail", NULL, 2, CMAP_VALUETYPE_BINARY) == CS_ERR_INVALID_PARAM);
 }
 
 static void
@@ -198,6 +202,16 @@ check_keys_value(cmap_handle_t handle)
 	free(key_value2);
 
 	assert(cmap_get_int8(handle, "testobj.testk", &i8) == CS_ERR_NOT_EXIST);
+
+	assert(cmap_get(handle, NULL, NULL, NULL, NULL) == CS_ERR_INVALID_PARAM);
+	assert(cmap_get(handle, "testobj.testkey", NULL, NULL, &type) == CS_OK);
+	assert(type == CMAP_VALUETYPE_BINARY);
+	assert(cmap_get(handle, "testobj.testkey", NULL, &len, NULL) == CS_OK);
+	assert(len == 3);
+	assert(cmap_get(handle, "testobj.testkey", key_value, NULL, NULL) == CS_ERR_INVALID_PARAM);
+	assert(cmap_get(handle, "testobj.testkey", key_value, NULL, &type) == CS_ERR_INVALID_PARAM);
+	len = 2;
+	assert(cmap_get(handle, "testobj.testkey", key_value, &len, NULL) == CS_ERR_INVALID_PARAM);
 }
 
 static void
@@ -286,6 +300,8 @@ keys_delete(cmap_handle_t handle)
 	assert(cmap_get(handle, "testobj.str_2", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
 	assert(cmap_delete(handle, "testobj.str") == CS_OK);
 	assert(cmap_get(handle, "testobj.str", NULL, NULL, &type) == CS_ERR_NOT_EXIST);
+
+	assert(cmap_delete(handle, NULL) == CS_ERR_INVALID_PARAM);
 }
 
 int
