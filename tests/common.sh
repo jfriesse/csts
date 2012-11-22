@@ -21,6 +21,7 @@ usage() {
     echo "Options:"
     echo "  -n              space separated nodes where test is executed"
     echo "  -i              print parseable test informations"
+    echo "  -c              corosync version (flatiron|needle)"
 
     exit 1
 }
@@ -226,11 +227,19 @@ test_required_nodes=${test_required_nodes:-1}
 test_max_nodes=${test_max_nodes:-1}
 test_max_runtime=${test_max_runtime:-300}
 test_description=${test_description:-Test has no description}
+test_corover_flatiron_enabled=${test_corover_flatiron_enabled:-true}
+[ "$test_corover_needle_enabled" == "" ] && test_corover_needle_enabled=$test_corover_flatiron_enabled
+if [ "$test_corover_undefined_enabled" == "" ];then
+    test_corover_undefined_enabled=false
+    "$test_corover_flatiron_enabled" && "$test_corover_needle_enabled" && test_corover_undefined_enabled=true
+fi
+
 test_apps_dir="~/csts-apps"
 test_var_dir="/var/csts"
 corosync_running=0
+corosync_version="undefined"
 
-while getopts "hin:" optflag; do
+while getopts "hic:n:" optflag; do
     case "$optflag" in
     h)
         usage
@@ -238,11 +247,17 @@ while getopts "hin:" optflag; do
     n)
         nodes="$OPTARG"
         ;;
+    c)
+	corosync_version="$OPTARG"
+	;;
     i)
 	echo "test_required_nodes=$test_required_nodes"
 	echo "test_max_nodes=$test_max_nodes"
 	echo "test_max_runtime=$test_max_runtime"
 	echo "test_description=$test_description"
+	echo "test_corover_undefined_enabled=$test_corover_undefined_enabled"
+	echo "test_corover_flatiron_enabled=$test_corover_flatiron_enabled"
+	echo "test_corover_needle_enabled=$test_corover_needle_enabled"
 	exit 0
 	;;
     \?|:)
@@ -250,6 +265,31 @@ while getopts "hin:" optflag; do
         ;;
     esac
 done
+
+case "$corosync_version" in
+"flatiron")
+    if ! $test_corover_flatiron_enabled;then
+        err "Test doesn't support corosync flatiron"
+        usage
+    fi
+    ;;
+"needle")
+    if ! $test_corover_needle_enabled;then
+        err "Test doesn't support corosync needle"
+        usage
+    fi
+    ;;
+"undefined")
+    if ! $test_corover_undefined_enabled;then
+        err "Test doesn't support undefined version of corosync"
+        usage
+    fi
+    ;;
+*)
+    err "Unsupported corosync version"
+    usage
+    ;;
+esac
 
 set_no_nodes
 

@@ -9,6 +9,7 @@ usage() {
     echo "Options:"
     echo "  -n              space separated nodes where test is executed"
     echo "  -l logfile      write complete log to given logfile (stdout by default)"
+    echo "  -c              corosync version (flatiron|needle)"
 
     exit 1
 }
@@ -148,7 +149,7 @@ init_test_nodes_pid() {
 
 logfile="/dev/stdout"
 
-while getopts "hil:n:" optflag; do
+while getopts "hic:l:n:" optflag; do
     case "$optflag" in
     h)
 	usage
@@ -159,11 +160,19 @@ while getopts "hil:n:" optflag; do
     l)
 	logfile="$OPTARG"
 	;;
+    c)
+	corosync_version="$OPTARG"
+	;;
     \?|:)
 	usage
         ;;
     esac
 done
+
+if [ "$corosync_version" != "flatiron" ] && [ "$corosync_version" != "needle" ];then
+    echo "Unsupported corosync version"
+    usage
+fi
 
 set_no_nodes
 
@@ -186,9 +195,11 @@ pushd tests &>/dev/null
 
 for test_exec in *.sh;do
     [ ! -x "$test_exec" ] && continue
-    nodes_needed=`./$test_exec -i | grep test_required_nodes | cut -d '=' -f 2-`
+    test_info=`./$test_exec -i`
+    nodes_needed=`echo "$test_info" | grep test_required_nodes | cut -d '=' -f 2-`
+    corover_enabled=`echo "$test_info" | grep test_corover_${corosync_version}_enabled | cut -d '=' -f 2-`
 
-    if [ "$nodes_needed" -gt "$no_nodes" ];then
+    if [ "$nodes_needed" -gt "$no_nodes" ] || ! $corover_enabled;then
 	echo "skipped $test_exec"
 	no_skipped=$(($no_skipped + 1))
 	continue
