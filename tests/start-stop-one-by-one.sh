@@ -18,19 +18,14 @@ done
 for ((i=0; i<$no_cycles; i++));do
     onodes_ip=`randomize_word_order $nodes_ip`
 
-    pids=""
     for node in $onodes_ip;do
-        start_corosync "$node" &
-        pids="$! $pids"
+        start_corosync "$node"
     done
-    strict_wait $pids
 
-    pids=""
+    onodes_ip=`randomize_word_order $nodes_ip`
     for node in $onodes_ip;do
-        stop_corosync "$node" &
-        pids="$! $pids"
+        stop_corosync "$node"
     done
-    strict_wait $pids
 done
 
 exit 0
