@@ -223,6 +223,15 @@ cmap_get() {
     fi
 }
 
+# Similar like wait, but returns error code if ANY of processes returned nonzero status code
+strict_wait() {
+    for pid in $*;do
+        wait $pid || return $?
+    done
+
+    return 0
+}
+
 test_required_nodes=${test_required_nodes:-1}
 test_max_nodes=${test_max_nodes:-1}
 test_max_runtime=${test_max_runtime:-300}
