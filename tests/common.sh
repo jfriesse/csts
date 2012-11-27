@@ -232,6 +232,24 @@ strict_wait() {
     return 0
 }
 
+randomize_word_order() {
+    local words=($*)
+    local no_words
+    local item_pos
+    local item
+
+    while [ "${#words[@]}" != 0 ];do
+        no_words=${#words[@]}
+        item_pos=$(($RANDOM % $no_words))
+        item=${words[$item_pos]}
+        unset words[$item_pos]
+        words=(${words[@]})
+        echo -n "$item "
+    done
+
+    return 0
+}
+
 test_required_nodes=${test_required_nodes:-1}
 test_max_nodes=${test_max_nodes:-1}
 test_max_runtime=${test_max_runtime:-300}
