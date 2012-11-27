@@ -308,16 +308,20 @@ int
 main(void)
 {
 	cmap_handle_t handle;
+	const void *con_res;
 
 	printf("cmap-getset initialize\n");
 
 	assert(cmap_initialize(&handle) == CS_OK);
+	assert(cmap_context_set(handle, keys_delete) == CS_OK);
 
 	printf("cmap-getset run\n");
 	keys_create(handle);
 	check_keys_value(handle);
 	key_replace(handle);
 	keys_delete(handle);
+	assert(cmap_context_get(handle, &con_res) == CS_OK);
+	assert(con_res == keys_delete);
 
 	printf("cmap-getset finish\n");
 

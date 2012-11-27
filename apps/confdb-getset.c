@@ -269,12 +269,14 @@ main(void)
 	confdb_handle_t handle;
 	confdb_callbacks_t callbacks;
 	hdb_handle_t object_handle;
+	const void *con_res;
 
 	printf("confdb-getset initialize\n");
 
 	memset(&callbacks, 0, sizeof(callbacks));
 
 	assert(confdb_initialize(&handle, &callbacks) == CS_OK);
+	assert(confdb_context_set(handle, keys_delete) == CS_OK);
 
 	assert(confdb_object_create(handle, OBJECT_PARENT_HANDLE,
 			"testconfdb", strlen("testconfdb"), &object_handle) == CS_OK);
@@ -285,6 +287,8 @@ main(void)
 	key_replace(handle, object_handle);
 	keys_delete(handle, object_handle);
 	assert(confdb_object_destroy(handle, object_handle) == CS_OK);
+	assert(confdb_context_get(handle, &con_res) == CS_OK);
+	assert(con_res == keys_delete);
 
 	printf("confdb-getset finish\n");
 
