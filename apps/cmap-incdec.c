@@ -74,6 +74,8 @@ incdec(cmap_handle_t handle)
 	assert(cmap_set_string(handle, "testobj.testkeystr", str) == CS_OK);
 	assert(cmap_set(handle, "testobj.testkeybin", "one", 3, CMAP_VALUETYPE_BINARY) == CS_OK);
 
+	assert(cmap_inc(handle, "nonexisting") == CS_ERR_NOT_EXIST);
+	assert(cmap_dec(handle, "nonexisting") == CS_ERR_NOT_EXIST);
 	assert(cmap_inc(handle, "testobj.testkeyflt") == CS_ERR_INVALID_PARAM);
 	assert(cmap_get_float(handle, "testobj.testkeyflt", &fltinc) == CS_OK);
 	assert(fltinc == flt);
