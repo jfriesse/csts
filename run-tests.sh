@@ -2,6 +2,8 @@
 
 set -e
 
+. inc/tar-writer.sh
+
 usage() {
     echo "$0 options"
     echo "Runs tests in tests directory"
