@@ -225,11 +225,13 @@ cmap_get() {
 
 # Similar like wait, but returns error code if ANY of processes returned nonzero status code
 strict_wait() {
+    local res=0
+
     for pid in $*;do
-        wait $pid || return $?
+        wait $pid || res=$?
     done
 
-    return 0
+    return $res
 }
 
 randomize_word_order() {
