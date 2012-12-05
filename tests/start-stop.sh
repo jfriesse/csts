@@ -6,7 +6,7 @@
 test_description="Test that start/stop in parallel cycle works"
 test_required_nodes=3
 test_max_nodes=-1
-test_max_runtime=1200
+test_max_runtime=600
 
 . common.sh
 
@@ -15,7 +15,7 @@ pids=""
 for node in $nodes_ip;do
     (compile_app "$node" "testcpg" "-lcpg"
      configure_corosync "$node"
-     for ((i=0; i<200; i++));do
+     for ((i=0; i<100; i++));do
          start_corosync "$node"
 
          no_retries=0
