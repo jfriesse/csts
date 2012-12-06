@@ -1,5 +1,5 @@
 /*
- * Check set / get / replace and delete for confdb
+ * Check set / get / replace and delete for cmap
  */
 #include <stdio.h>
 
