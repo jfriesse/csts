@@ -199,15 +199,18 @@ int
 main(void)
 {
 	cmap_handle_t handle;
+	int i;
 
 	printf("cmap-iter initialize\n");
 
 	assert(cmap_initialize(&handle) == CS_OK);
 
 	printf("cmap-iter run\n");
-	keys_create(handle);
-	keys_iter(handle);
-	keys_delete(handle);
+	for (i = 0; i < 100; i++) {
+		keys_create(handle);
+		keys_iter(handle);
+		keys_delete(handle);
+	}
 
 	printf("cmap-iter finish\n");
 
