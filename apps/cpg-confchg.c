@@ -4,15 +4,15 @@
 
 /*
  * Output is:
- * ConfchgCallback:CPGCONFCHGGROUP:(join_node_1 join_pid1)[,(join_node_2 join_pid2)...]:(leave_node1 leave_pid1)[,(leave_node2 leave_pid2)...]:(member_node1 member_pid1)[,(member_node2 member_pid2)
- * TotemConfchgCallback:ring_id_node.ring_id_seq:(member_node1 member_pid1)[,(member_node2 member_pid2)
- * VIEW:(no_nodes:NE - Not equal):cpg_node1[,cpg_node2]:totem_node1[,totem_node2]:
+ * Basic_iso_date_time:ConfchgCallback:CPGCONFCHGGROUP:(join_node_1 join_pid1)[,(join_node_2 join_pid2)...]:(leave_node1 leave_pid1)[,(leave_node2 leave_pid2)...]:(member_node1 member_pid1)[,(member_node2 member_pid2)
+ * Basic_iso_date_time:TotemConfchgCallback:ring_id_node.ring_id_seq:(member_node1 member_pid1)[,(member_node2 member_pid2)
+ * Basic_iso_date_time:VIEW:(no_nodes:NE - Not equal):cpg_node1[,cpg_node2]:totem_node1[,totem_node2]:
  *
  * Example:
- * ConfchgCallback:CPGCONFCHGGROUP:(6b26220a 1dc2)::(6b26220a 1dc2)
- * VIEW:NE:6b26220a:
- * TotemConfchgCallback:6b26220a.a00000000010f98:6b26220a,6c26220a
- * VIEW:2:6b26220a,6c26220a:6b26220a,6c26220a
+ * 20130124T141344:ConfchgCallback:CPGCONFCHGGROUP:(6b26220a 1dc2)::(6b26220a 1dc2)
+ * 20130124T141344:VIEW:NE:6b26220a:
+ * 20130124T141344:TotemConfchgCallback:6b26220a.a00000000010f98:6b26220a,6c26220a
+ * 20130124T141344:VIEW:2:6b26220a,6c26220a:6b26220a,6c26220a
  */
 
 #include <inttypes.h>
@@ -42,6 +42,24 @@ struct view {
 	int nodeid;
 };
 static struct view nodes[MAX_NODES];
+
+static void print_basic_iso_datetime(void)
+{
+	time_t t;
+	struct tm *tmp;
+	char time_str[128];
+
+	t = time(NULL);
+	tmp = localtime(&t);
+	if (tmp == NULL) {
+		exit (3);
+	}
+
+	if (strftime(time_str, sizeof(time_str), "%Y%m%dT%H%M%S", tmp) == 0) {
+		exit (3);
+	}
+	printf("%s", time_str);
+}
 
 static void change_node_state(int nodeid, int up, int item)
 {
@@ -101,7 +119,8 @@ static void display_nodes_view(void) {
 	cpg_str[0] = 0;
 	totem_str[0] = 0;
 
-        printf("VIEW:");
+	print_basic_iso_datetime();
+        printf(":VIEW:");
 	for (i = 0;i < MAX_NODES; i++) {
 		if (nodes[i].nodeid != 0) {
 			if (nodes[i].cpg_up == 1 || nodes[i].totem_up == 1) {
@@ -156,7 +175,8 @@ static void ConfchgCallback (
 {
 	int i;
 
-	printf("ConfchgCallback:");
+	print_basic_iso_datetime();
+	printf(":ConfchgCallback:");
 	print_cpgname(groupName);
 	printf(":");
 	for (i=0; i < joined_list_entries; i++) {
@@ -195,7 +215,8 @@ static void TotemConfchgCallback (
 {
 	int i;
 
-	printf("TotemConfchgCallback:%x.%"PRIx64, ring_id.nodeid, ring_id.seq);
+	print_basic_iso_datetime();
+	printf(":TotemConfchgCallback:%x.%"PRIx64, ring_id.nodeid, ring_id.seq);
 	printf(":");
 
 	reset_nodes_state(ITEM_TOTEM);
