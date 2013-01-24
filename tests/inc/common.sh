@@ -164,6 +164,20 @@ corosync_mem_used() {
     run "$node" 'ps -o rss -p `cat /var/run/corosync.pid` | sed -n 2p'
 }
 
+# pause_corosync node
+pause_corosync() {
+    local node="$1"
+
+    run "$node" 'kill -STOP `cat /var/run/corosync.pid`'
+}
+
+# unpause_corosync node
+unpause_corosync() {
+    local node="$1"
+
+    run "$node" 'kill -CONT `cat /var/run/corosync.pid`'
+}
+
 exit_trap_start_cb() {
     return 0
 }
