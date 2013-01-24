@@ -44,6 +44,7 @@ resolve_nodes_ip() {
 	[ "$ip" == "" ] && exit 1
 	[ "$nodes_ip" != "" ] && nodes_ip="$nodes_ip "
 	nodes_ip="$nodes_ip$ip"
+	nodes_ip_array=( "${nodes_ip_array[@]}" "$ip" )
     done
 }
 
@@ -335,7 +336,7 @@ fi
 
 resolve_nodes_ip
 
-master_node=`echo $nodes_ip | cut -d ' ' -f 1`
+master_node=${nodes_ip_array[0]}
 mcast_addr="239.255."`echo $master_node | cut -d '.' -f 3-4`
 test_pid=$$
 
