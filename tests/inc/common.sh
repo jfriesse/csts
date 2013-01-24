@@ -198,6 +198,10 @@ exit_trap() {
 	if run "$i" "[ -f $test_var_dir/corosync.conf.bck ]";then
 	    run "$i" "mv -f $test_var_dir/corosync.conf.bck /etc/corosync/corosync.conf"
 	fi
+
+	if [ "$confchg_used" == "true" ];then
+            confchg_stop "$i"
+        fi
     done
 
     exit_trap_end_cb
