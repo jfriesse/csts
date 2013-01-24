@@ -5,7 +5,7 @@
 
 test_description="Test that we are using multicast loop socket instead of rely on multicast loop kernel feature"
 
-. common.sh
+. inc/common.sh
 
 exit_trap_end_cb() {
     run "$nodes_ip" "iptables -D INPUT ! -i lo -p udp -j DROP && iptables -D OUTPUT ! -o lo -p udp -j DROP"

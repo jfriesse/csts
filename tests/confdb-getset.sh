@@ -5,7 +5,7 @@
 
 test_description="Test confdb - basic get/set/replace and delete operations"
 
-. common.sh
+. inc/common.sh
 
 configure_corosync "$nodes_ip"
 start_corosync "$nodes_ip"

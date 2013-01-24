@@ -5,7 +5,7 @@
 
 test_description="Test SAM - test recovery policy quit and signal delivery"
 
-. common.sh
+. inc/common.sh
 
 compile_app "$nodes_ip" "sam-test2" "-lsam"
 run_app "$nodes_ip" 'sam-test2'

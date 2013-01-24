@@ -5,7 +5,7 @@
 
 test_description="Test SAM - test recovery policy restart"
 
-. common.sh
+. inc/common.sh
 
 compile_app "$nodes_ip" "sam-test1" "-lsam"
 run_app "$nodes_ip" 'sam-test1'

@@ -5,7 +5,7 @@
 
 test_description="Test that shm buffers are correctly unlinked"
 
-. common.sh
+. inc/common.sh
 
 before_test=`run "$nodes_ip" "ls -1 /dev/shm/"`
 

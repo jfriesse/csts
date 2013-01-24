@@ -5,7 +5,7 @@
 
 test_description="Test that corosync can start and correctly bind to ipv6 address"
 
-. common.sh
+. inc/common.sh
 
 generate_corosync_conf_cb() {
     local ipv6_addr

@@ -8,7 +8,7 @@ test_required_nodes=3
 test_max_nodes=-1
 test_max_runtime=600
 
-. common.sh
+. inc/common.sh
 
 pids=""
 

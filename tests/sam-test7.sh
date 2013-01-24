@@ -7,7 +7,7 @@ test_description="Test SAM - quorum integration"
 test_corover_flatiron_enabled=false
 test_corover_needle_enabled=true
 
-. common.sh
+. inc/common.sh
 
 generate_corosync_conf_cb() {
     sed 's/^[ \t]*#provider: .*$/\tprovider: corosync_votequorum\n\texpected_votes: 1/'

@@ -7,7 +7,7 @@ test_description="Test that corosync doesn't crash on FAILED TO RECEIVE conditio
 test_required_nodes=2
 test_max_nodes=2
 
-. common.sh
+. inc/common.sh
 
 node_a=${nodes_ip% *}
 node_b=${nodes_ip#* }

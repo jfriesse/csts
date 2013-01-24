@@ -5,7 +5,7 @@
 
 test_description="Test that all man pages have valid links"
 
-. common.sh
+. inc/common.sh
 
 #cat_mp manual_page
 cat_mp() {

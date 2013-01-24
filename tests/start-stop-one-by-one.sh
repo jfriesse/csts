@@ -7,7 +7,7 @@ test_description="Test that start and stop of all nodes one by one works"
 test_required_nodes=3
 test_max_nodes=-1
 
-. common.sh
+. inc/common.sh
 
 no_cycles=25
 

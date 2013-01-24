@@ -5,7 +5,7 @@
 
 test_description="Test that big ringnumber in config doesn't result in segfault"
 
-. common.sh
+. inc/common.sh
 
 generate_corosync_conf_cb() {
     sed 's/^[ \t]*ringnumber: .*$/ringnumber: 100/'

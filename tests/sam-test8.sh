@@ -7,7 +7,7 @@ test_description="Test SAM - cmap integration with quit policy"
 test_corover_flatiron_enabled=false
 test_corover_needle_enabled=true
 
-. common.sh
+. inc/common.sh
 
 configure_corosync "$nodes_ip"
 start_corosync "$nodes_ip"

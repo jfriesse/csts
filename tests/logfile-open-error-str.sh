@@ -5,7 +5,7 @@
 
 test_description="Test that error message is properly saved"
 
-. common.sh
+. inc/common.sh
 
 generate_corosync_conf_cb() {
     sed 's/^[ \t]*logfile: .*$/logfile: \/nonexistingdir\/corosync.log/'

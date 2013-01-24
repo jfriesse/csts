@@ -5,7 +5,7 @@
 
 test_description="Test that trace level works"
 
-. common.sh
+. inc/common.sh
 
 generate_corosync_conf_cb() {
     sed 's/^[ \t]*debug: .*$/debug: on/'

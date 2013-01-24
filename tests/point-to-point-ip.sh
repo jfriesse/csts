@@ -5,7 +5,7 @@
 
 test_description="Test that point to point address is correctly found"
 
-. common.sh
+. inc/common.sh
 
 bindnetaddr="192.168.211.1"
 
