@@ -9,6 +9,8 @@ test_max_nodes=-1
 test_max_runtime=600
 
 . inc/common.sh
+. inc/fw.sh
+. inc/confchg.sh
 
 declare -A node_status
 declare -A node_line
@@ -16,9 +18,7 @@ declare -A node_line
 active_nodes=0
 
 exit_trap_end_cb() {
-    for node in $nodes_ip;do
-        run "$node" "iptables -D INPUT ! -i lo -p udp -j DROP || true ; iptables -D OUTPUT ! -o lo -p udp -j DROP || true"
-    done
+    fw_unblock_udp "$nodes_ip" true
 }
 
 check_views() {
@@ -28,13 +28,7 @@ check_views() {
     for n in $nodes_ip;do
         [ ${node_status["$n"]} == "up" ] && no_nodes=$active_nodes || no_nodes=1
 
-        repeats=0
-        while ! run "$n" "tail -1 /tmp/cpg-confchg.log" | grep "^VIEW:$no_nodes:" &>/dev/null && [ $no_retries -lt 40 ];do
-            sleep 0.5
-            no_retries=$(($no_retries + 1))
-        done
-
-	[ "$no_retries" -ge 40 ] && return 1 || true
+        confchg_checkview "$n" "$no_nodes" || return $?
     done
 
     return 0
@@ -48,11 +42,11 @@ change_node_state() {
     local no_cbs
 
     if [ ${node_status["$node"]} == "up" ];then
-        run "$node" "iptables -A INPUT ! -i lo -p udp -j DROP && iptables -A OUTPUT ! -o lo -p udp -j DROP"
+        fw_block_udp "$node" || return $?
         node_status["$node"]="down"
         active_nodes=$(($active_nodes - 1))
     else
-        run "$node" "iptables -D INPUT ! -i lo -p udp -j DROP && iptables -D OUTPUT ! -o lo -p udp -j DROP"
+        fw_unblock_udp "$node" || return $?
         node_status["$node"]="up"
         active_nodes=$(($active_nodes + 1))
     fi
@@ -63,10 +57,9 @@ change_node_state() {
 }
 
 for node in $nodes_ip;do
-    compile_app "$node" "cpg-confchg" "-lcpg"
     configure_corosync "$node"
     start_corosync "$node"
-    run_app "$node" "cpg-confchg > /tmp/cpg-confchg.log &"
+    confchg_start "$node"
     node_status["$node"]="up"
     active_nodes=$(($active_nodes + 1))
 done
