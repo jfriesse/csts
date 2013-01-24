@@ -13,19 +13,10 @@ test_max_runtime=600
 pids=""
 
 for node in $nodes_ip;do
-    (compile_app "$node" "testcpg" "-lcpg"
-     configure_corosync "$node"
+    (configure_corosync "$node"
      for ((i=0; i<100; i++));do
          start_corosync "$node"
-
-         no_retries=0
-         while ! (echo "TEST"; echo "EXIT") | run_app "$node" 'testcpg' && [ $no_retries -lt 20 ]; do
-             sleep 0.5
-             no_retries=$(($no_retries + 1))
-         done
-
          sleep 0.0$(($RANDOM % 10))
-
          stop_corosync "$node"
      done) &
     pids="$! $pids"
