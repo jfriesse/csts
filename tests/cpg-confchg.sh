@@ -13,7 +13,6 @@ test_max_runtime=600
 . inc/confchg.sh
 
 declare -A node_status
-declare -A node_line
 
 active_nodes=0
 
