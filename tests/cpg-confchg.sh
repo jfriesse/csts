@@ -63,7 +63,7 @@ for node in $nodes_ip;do
     active_nodes=$(($active_nodes + 1))
 done
 
-check_views || return $?
+check_views || exit $?
 
 for ((i=0; i<100; i++));do
     node_num=$(($RANDOM % $no_nodes + 1))
