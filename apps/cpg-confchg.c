@@ -27,6 +27,7 @@
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 #include <corosync/corotypes.h>
 #include <corosync/cpg.h>
