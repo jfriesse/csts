@@ -56,6 +56,8 @@ prepare_node_dirs() {
     for i in $nodes;do
         ssh "root@$i" "mkdir -p $test_apps_dir $test_var_dir"
     done
+
+    mkdir -p "$test_var_dir"
 }
 
 run() {

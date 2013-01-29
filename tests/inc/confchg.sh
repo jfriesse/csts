@@ -12,7 +12,8 @@ confchg_start() {
 
     for node in $nodes;do
         compile_app "$node" "cpg-confchg" "-lcpg" || return $?
-        run_app "$node" 'cpg-confchg > /tmp/cpg-confchg.log & echo $! > '"$test_var_dir/cpg-confchg.pid" || return $?
+        run_app "$node" 'cpg-confchg' > "$test_var_dir/cpg-confchg-$node.log" &
+        echo $! > "$test_var_dir/cpg-confchg-$node.pid"
     done
 
     confchg_used=true
@@ -26,7 +27,7 @@ confchg_checkview() {
     local expected_nodes="$2"
     local no_retries=0
 
-    while ! run "$node" "tail -1 /tmp/cpg-confchg.log" | grep "^[0-9T]*:VIEW:$expected_nodes:" &>/dev/null && [ $no_retries -lt 40 ];do
+    while ! tail -1 "$test_var_dir/cpg-confchg-$node.log" | grep "^[0-9T]*:VIEW:$expected_nodes:" &>/dev/null && [ $no_retries -lt 40 ];do
         sleep 0.5
         no_retries=$(($no_retries + 1))
     done
@@ -40,9 +41,10 @@ confchg_stop() {
     local node
 
     for node in $nodes;do
-        if run "$node" "[ -f $test_var_dir/cpg-confchg.pid ]";then
-            run "$node" "kill -INT "'`cat '"$test_var_dir"'/cpg-confchg.pid`'" &>/dev/null; rm $test_var_dir/cpg-confchg.pid"
-            run "$node" "cat /tmp/cpg-confchg.log"
+        if [ -f "$test_var_dir/cpg-confchg-$node.pid" ];then
+            kill -INT `cat "$test_var_dir/cpg-confchg-$node.pid"` &>/dev/null || true
+            rm "$test_var_dir/cpg-confchg-$node.pid" || true
+            cat "$test_var_dir/cpg-confchg-$node.log" || true
         fi
     done
 
