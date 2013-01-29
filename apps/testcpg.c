@@ -191,6 +191,8 @@ int main (int argc, char *argv[]) {
 		group_name.length = 6;
 	}
 
+	setlinebuf(stdout);
+
 	result = cpg_model_initialize (&handle, CPG_MODEL_V1, (cpg_model_data_t *)&model_data, NULL);
 	if (result != CS_OK) {
 		printf ("Could not initialize Cluster Process Group API instance error %d\n", result);
