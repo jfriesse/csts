@@ -26,7 +26,6 @@ confchg_checkview() {
     local expected_nodes="$2"
     local no_retries=0
 
-    repeats=0
     while ! run "$node" "tail -1 /tmp/cpg-confchg.log" | grep "^[0-9T]*:VIEW:$expected_nodes:" &>/dev/null && [ $no_retries -lt 40 ];do
         sleep 0.5
         no_retries=$(($no_retries + 1))
