@@ -164,6 +164,7 @@ static void DeliverCallback (
 		if (last_expected == msg->seq_no) {
 			last_expected++;
 		} else {
+			print_basic_iso_datetime(stderr);
 			fprintf(stderr, ":(%"PRIx32" %"PRIx32"):%"PRIu64":", nodeid, pid, msg->seq_no);
 			fprintf(stderr, "Incorrect msg seq %"PRIu64" != %"PRIu64"\n", msg->seq_no, last_expected);
 			return ;
