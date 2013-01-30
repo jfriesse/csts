@@ -2,6 +2,7 @@
  * Generate maximum cpg load
  * Output (stdout):
  * Basic_iso_date_time:(nodeid pid):msg_seq_no:msg_data_length:checksum
+ * Basic_iso_date_time:Sending:msg_seq_no:msg_data_length:checksum:cpg_mcast_error
  * (stderr):
  * Basic_iso_date_time:(nodeid pid):msg_seq_no:Message
  */
@@ -121,7 +122,15 @@ cs_error_t send_msg(cpg_handle_t handle, int refill_data)
 	iov[1].iov_base = (void *)data;
 	iov[1].iov_len = msg.data_len;
 
+	if (!quiet) {
+		print_basic_iso_datetime(stdout);
+		fprintf(stdout, ":Sending:%"PRIu64":", msg.seq_no);
+		fprintf(stdout, "%"PRIu32":%u", msg.data_len, msg.chsum);
+	}
 	result = cpg_mcast_joined (handle, CPG_TYPE_AGREED, iov, 2);
+	if (!quiet) {
+		printf(":%u\n", result);
+	}
 
 	return (result);
 }
@@ -167,7 +176,6 @@ static void DeliverCallback (
 			print_basic_iso_datetime(stderr);
 			fprintf(stderr, ":(%"PRIx32" %"PRIx32"):%"PRIu64":", nodeid, pid, msg->seq_no);
 			fprintf(stderr, "Incorrect msg seq %"PRIu64" != %"PRIu64"\n", msg->seq_no, last_expected);
-			return ;
 		}
 	}
 
