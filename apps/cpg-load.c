@@ -26,6 +26,16 @@
 
 #define MAX_MSG_LEN     50000
 
+#define cs_repeat(counter, max, code) do {	\
+	code;					\
+	if (result == CS_ERR_TRY_AGAIN) {	\
+		counter++;			\
+		sleep(1);			\
+	} else {				\
+		break;				\
+	}					\
+} while (counter < max)
+
 struct my_msg {
     uint64_t seq_no __attribute__ ((aligned (8)));
     uint16_t chsum __attribute__ ((aligned (8)));
@@ -205,6 +215,7 @@ int main (int argc, char *argv[]) {
 	long num = 1;
 	int ch;
 	struct pollfd pfd;
+	int retries;
 
 	last_msg = 0;
 	last_expected = 0;
@@ -238,13 +249,15 @@ int main (int argc, char *argv[]) {
 		exit (1);
 	}
 
-	result = cpg_join(handle, &group_name);
+	retries = 0;
+	cs_repeat(retries, 30, result = cpg_join(handle, &group_name));
 	if (result != CS_OK) {
 		fprintf (stderr, "Could not join process group, error %d\n", result);
 		exit (1);
 	}
 
-	result = cpg_local_get (handle, &local_nodeid);
+	retries = 0;
+	cs_repeat(retries, 30, result = cpg_local_get (handle, &local_nodeid));
 	if (result != CS_OK) {
 		fprintf (stderr, "Could not get local node id\n");
 		exit (1);
