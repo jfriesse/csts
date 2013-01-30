@@ -284,9 +284,14 @@ int main (int argc, char *argv[]) {
 		}
 
 		if (result == 1 && pfd.revents & POLLIN) {
-			if (cpg_dispatch (handle, CS_DISPATCH_ALL) != CS_OK) {
-				fprintf (stderr, "Dispatch error %d\n", result);
-				exit(1);
+			if ((result = cpg_dispatch (handle, CS_DISPATCH_ALL)) != CS_OK) {
+				if (result == CS_ERR_LIBRARY) {
+					exit(0);
+				}
+				if (result != CS_ERR_TRY_AGAIN) {
+					fprintf (stderr, "Dispatch error %d\n", result);
+					exit(1);
+				}
 			}
 		}
 	} while (result != -1);
