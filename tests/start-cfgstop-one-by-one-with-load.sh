@@ -1,0 +1,38 @@
+#!/bin/bash
+#
+# Author: Jan Friesse <jfriesse@redhat.com>
+#
+
+test_description="Test that start and stop of all nodes one by one works"
+test_required_nodes=3
+test_max_nodes=-1
+
+. inc/common.sh
+. inc/cpg-load.sh
+
+no_cycles=25
+
+for node in $nodes_ip;do
+    configure_corosync "$node"
+    cpg_load_prepare "$node"
+done
+
+for ((i=0; i<$no_cycles; i++));do
+    onodes_ip=`randomize_word_order $nodes_ip`
+
+    for node in $onodes_ip;do
+        start_corosync "$node"
+
+        cpg_load_start "$node" "5000"
+    done
+
+    onodes_ip=`randomize_word_order $nodes_ip`
+    for node in $onodes_ip;do
+        stop_corosync "$node" true
+
+	cpg_load_verify "$node"
+	cpg_load_stop "$node"
+    done
+done
+
+exit 0
