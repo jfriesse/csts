@@ -140,11 +140,17 @@ start_corosync() {
     [ "$no_retries" -lt 20 ] && return 0 || return 1
 }
 
+# stop_corosync [use_corosync-cfgtool]
 stop_corosync() {
     local node="$1"
+    local use_cfgtool="$2"
     local no_retries=0
 
-    run "$node" 'kill -INT `cat /var/run/corosync.pid`'
+    if [ "$use_cfgtool" == true ];then
+	run "$node" 'corosync-cfgtool -H'
+    else
+        run "$node" 'kill -INT `cat /var/run/corosync.pid`'
+    fi
 
     while ! cat_corosync_log "$node" | grep 'Corosync Cluster Engine exiting' && [ $no_retries -lt 20 ];do
 	sleep 1
