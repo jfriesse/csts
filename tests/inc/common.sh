@@ -230,7 +230,7 @@ cmap_set() {
     local type="$3"
     local value="$4"
 
-    if ! run "$node" "which corosync-cmapctl";then
+    if ! run "$node" "which corosync-cmapctl &>/dev/null";then
 	# Use corosync-objctl
 	run "$node" "corosync-objctl -w $key=$value"
     else
@@ -242,7 +242,7 @@ cmap_get() {
     local node="$1"
     local key="$2"
 
-    if ! run "$node" "which corosync-cmapctl";then
+    if ! run "$node" "which corosync-cmapctl &>/dev/null";then
 	# Use corosync-objctl
 	run "$node" "corosync-objctl -a | grep '^$key=' | sed 's/^.*=//'"
     else
