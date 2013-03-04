@@ -81,18 +81,21 @@ uint32_t compute_chsum(const unsigned char *data, uint32_t data_len)
 	return (checksum);
 }
 
+void init_data(unsigned char *data, uint32_t data_len)
+{
+	int j;
+
+	for (j = 0; j < data_len; j++) {
+		data[j] = (unsigned char)rand();
+	}
+}
+
 void fill_data(unsigned char *data, uint32_t data_len)
 {
 	int j;
-	unsigned char val;
-	unsigned char step;
 
-	val = (unsigned char)rand();
-	step = (unsigned char)rand();
-
-	for (j = 0; j < data_len; j++) {
-		data[j] = val;
-		val += step;
+	for (j = 0; j < data_len / 10; j++) {
+                data[rand() % data_len] = (unsigned char)rand();
 	}
 }
 
@@ -113,8 +116,14 @@ cs_error_t send_msg(cpg_handle_t handle, int refill_data)
 {
 	struct iovec iov[2];
 	static unsigned char data[MAX_MSG_LEN];
+	static int data_initialized = 0;
 	struct my_msg msg;
 	cs_error_t result;
+
+	if (!data_initialized) {
+		data_initialized = 1;
+		init_data(data, sizeof(data));
+	}
 
 	generate_msg(&msg, data, sizeof(data), refill_data);
 	iov[0].iov_base = (void *)&msg;
