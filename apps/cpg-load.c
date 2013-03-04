@@ -224,6 +224,20 @@ static void usage(void)
 	exit(1);
 }
 
+static void init_rand(void) {
+	FILE *f;
+	unsigned int init_v;
+
+	init_v = time(NULL) + getpid();
+
+	f = fopen("/dev/urandom", "rb");
+	if (f != NULL) {
+		fread(&init_v, sizeof(init_v), 1, f);
+		fclose(f);
+	}
+	srand(init_v);
+}
+
 int main (int argc, char *argv[]) {
 	cpg_handle_t handle;
 	int select_fd;
@@ -282,6 +296,8 @@ int main (int argc, char *argv[]) {
 	}
 
 	setlinebuf(stdout);
+
+	init_rand();
 
 	cpg_fd_get(handle, &select_fd);
 
