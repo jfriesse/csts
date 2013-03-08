@@ -14,8 +14,8 @@ cpg_load_prepare "$nodes_ip"
 start_corosync "$nodes_ip"
 cpg_load_start "$nodes_ip" "500"
 sleep 180
-cpg_load_verify "$nodes_ip"
 cpg_load_stop "$nodes_ip"
+cpg_load_verify "$nodes_ip"
 stop_corosync "$nodes_ip"
 
 exit 0
