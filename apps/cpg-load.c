@@ -1,10 +1,9 @@
 /*
  * Generate maximum cpg load
  * Output (stdout):
- * Basic_iso_date_time:(nodeid pid):msg_seq_no:msg_data_length:checksum
+ * Basic_iso_date_time:Arrived:(nodeid pid):msg_seq_no:msg_data_length:checksum
  * Basic_iso_date_time:Sending:msg_seq_no:msg_data_length:checksum:cpg_mcast_error
- * (stderr):
- * Basic_iso_date_time:(nodeid pid):msg_seq_no:Message
+ * Basic_iso_date_time:Error:(nodeid pid):msg_seq_no:Message
  */
 
 #include <inttypes.h>
@@ -134,7 +133,7 @@ cs_error_t send_msg(cpg_handle_t handle, int refill_data)
 	if (!quiet) {
 		print_basic_iso_datetime(stdout);
 		fprintf(stdout, ":Sending:%"PRIu64":", msg.seq_no);
-		fprintf(stdout, "%"PRIu32":%u", msg.data_len, msg.chsum);
+		fprintf(stdout, "%"PRIu32":%04x", msg.data_len, msg.chsum);
 	}
 	result = cpg_mcast_joined (handle, CPG_TYPE_AGREED, iov, 2);
 	if (!quiet) {
@@ -162,6 +161,13 @@ void send_msgs(cpg_handle_t handle, int no_msgs)
 	}
 }
 
+static void print_error_msg_start(uint32_t nodeid, uint32_t pid, uint64_t seq_no)
+{
+
+	print_basic_iso_datetime(stdout);
+	fprintf(stdout, ":Error:(%"PRIx32" %"PRIx32"):%"PRIu64":", nodeid, pid, seq_no);
+}
+
 static void DeliverCallback (
 	cpg_handle_t handle,
 	const struct cpg_name *groupName,
@@ -171,34 +177,34 @@ static void DeliverCallback (
 	size_t cpg_msg_len)
 {
 	struct my_msg *msg = (struct my_msg *)cpg_msg;
+	uint32_t chsum, expected_chsum;
 
 	if (!quiet) {
 		print_basic_iso_datetime(stdout);
-		fprintf(stdout, ":(%"PRIx32" %"PRIx32"):%"PRIu64":", nodeid, pid, msg->seq_no);
-		fprintf(stdout, "%"PRIu32":%u\n", msg->data_len, msg->chsum);
+		fprintf(stdout, ":Arrived:(%"PRIx32" %"PRIx32"):%"PRIu64":", nodeid, pid, msg->seq_no);
+		fprintf(stdout, "%"PRIu32":%04x\n", msg->data_len, msg->chsum);
 	}
 
 	if (nodeid == local_nodeid && pid == getpid()) {
 		if (last_expected == msg->seq_no) {
 			last_expected++;
 		} else {
-			print_basic_iso_datetime(stderr);
-			fprintf(stderr, ":(%"PRIx32" %"PRIx32"):%"PRIu64":", nodeid, pid, msg->seq_no);
-			fprintf(stderr, "Incorrect msg seq %"PRIu64" != %"PRIu64"\n", msg->seq_no, last_expected);
+			print_error_msg_start(nodeid, pid, msg->seq_no);
+			fprintf(stdout, "Incorrect msg seq %"PRIu64" != %"PRIu64"\n", msg->seq_no, last_expected);
 		}
 	}
 
 	if ((msg->data_len + sizeof(*msg)) != cpg_msg_len) {
-		print_basic_iso_datetime(stderr);
-		fprintf(stderr, ":(%"PRIx32" %"PRIx32"):%"PRIu64":", nodeid, pid, msg->seq_no);
-		fprintf(stderr, "Incorrect message length %"PRIu32"+%zu != %zu\n", msg->data_len, sizeof(*msg), cpg_msg_len);
+		print_error_msg_start(nodeid, pid, msg->seq_no);
+		fprintf(stdout, "Incorrect message length %"PRIu32"+%zu != %zu\n", msg->data_len, sizeof(*msg), cpg_msg_len);
 		return ;
 	}
 
-	if (msg->chsum != compute_chsum(msg->data, msg->data_len)) {
-		print_basic_iso_datetime(stderr);
-		fprintf(stderr, ":(%"PRIx32" %"PRIx32"):%"PRIu64":", nodeid, pid, msg->seq_no);
-		fprintf(stderr, "Incorrect message chsum %u != %u\n", msg->chsum, compute_chsum(msg->data, msg->data_len));
+	chsum = msg->chsum;
+	expected_chsum = compute_chsum(msg->data, msg->data_len);
+	if (chsum != expected_chsum) {
+		print_error_msg_start(nodeid, pid, msg->seq_no);
+		fprintf(stdout, "Incorrect message chsum %04x != %04x\n", chsum, expected_chsum);
 		return ;
 	}
 
@@ -218,7 +224,7 @@ static void sigintr_handler (int signum) {
 static void usage(void)
 {
 	printf("Usage: [-q] [-n num]\n");
-	printf(" -q         Quiet mode\n");
+	printf(" -q         Quiet mode (only err messages are displayed)\n");
 	printf(" -n num     Number of messages in one burst\n");
 
 	exit(1);
