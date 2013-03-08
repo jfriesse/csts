@@ -26,7 +26,7 @@ cpg_load_start() {
     fi
 
     for node in $nodes;do
-        run_app "$node" "cpg-load -n $msgs" > "$test_var_dir/cpg-load-stdout-$node.log" 2>"$test_var_dir/cpg-load-err-$node.log" &
+        run_app "$node" "cpg-load -n $msgs" > "$test_var_dir/cpg-load-$node.log" &
         echo $! > "$test_var_dir/cpg-load-$node.pid"
     done
 
@@ -40,7 +40,7 @@ cpg_load_verify() {
     local err=0
 
     for node in $nodes;do
-        if grep "^[0-9T]*:" "$test_var_dir/cpg-load-err-$node.log" &>/dev/null;then
+        if grep "^[0-9T]*:Error:" "$test_var_dir/cpg-load-$node.log";then
             return 1
         fi
     done
