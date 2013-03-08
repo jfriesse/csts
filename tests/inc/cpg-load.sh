@@ -56,7 +56,8 @@ cpg_load_stop() {
 
     for node in $nodes;do
         if [ -f "$test_var_dir/cpg-load-$node.pid" ];then
-            kill -INT `cat "$test_var_dir/cpg-load-$node.pid"` &>/dev/null || true
+            pkill -P "`cat \"$test_var_dir/cpg-load-$node.pid\"`" || true
+            wait "`cat \"$test_var_dir/cpg-load-$node.pid\"`" || true
             rm "$test_var_dir/cpg-load-$node.pid" || true
         fi
     done
