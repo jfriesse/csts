@@ -157,7 +157,15 @@ stop_corosync() {
 	no_retries=$(($no_retries + 1))
     done
 
-    [ "$no_retries" -lt 20 ] && return 0 || return 1
+    if [ "$no_retries" -lt 20 ];then
+	return 0
+    else
+        if ! run "$node" "[ -f /var/run/corosync.pid ]" && ! run "$node" "pgrep corosync &>/dev/null";then
+            return 0
+        else
+            return 1
+        fi
+    fi
 }
 
 kill_corosync() {
