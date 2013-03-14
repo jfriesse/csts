@@ -102,7 +102,7 @@ void generate_msg(struct my_msg *msg, unsigned char *data, uint32_t data_len, in
 {
 
         msg->seq_no = last_msg;
-	msg->data_len = rand() % data_len;
+	msg->data_len = rand() % (data_len + 1);
 
 	if (refill_data) {
 		fill_data(data, data_len);
