@@ -93,7 +93,7 @@ void fill_data(unsigned char *data, uint32_t data_len)
 {
 	int j;
 
-	for (j = 0; j < data_len / 10; j++) {
+	for (j = 0; j < (data_len / 10) + 1; j++) {
                 data[rand() % data_len] = (unsigned char)rand();
 	}
 }
