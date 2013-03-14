@@ -111,7 +111,7 @@ void generate_msg(struct my_msg *msg, unsigned char *data, uint32_t data_len, in
 	msg->chsum = compute_chsum(data, msg->data_len);
 }
 
-cs_error_t send_msg(cpg_handle_t handle, int refill_data)
+cs_error_t send_msg(cpg_handle_t handle, int refill_data, int max_msg_len)
 {
 	struct iovec iov[2];
 	static unsigned char data[MAX_MSG_LEN];
@@ -124,7 +124,7 @@ cs_error_t send_msg(cpg_handle_t handle, int refill_data)
 		init_data(data, sizeof(data));
 	}
 
-	generate_msg(&msg, data, sizeof(data), refill_data);
+	generate_msg(&msg, data, max_msg_len, refill_data);
 	iov[0].iov_base = (void *)&msg;
 	iov[0].iov_len = sizeof(msg);
 	iov[1].iov_base = (void *)data;
@@ -143,7 +143,7 @@ cs_error_t send_msg(cpg_handle_t handle, int refill_data)
 	return (result);
 }
 
-void send_msgs(cpg_handle_t handle, int no_msgs)
+void send_msgs(cpg_handle_t handle, int no_msgs, int max_msg_len)
 {
 	int i;
 	int refill_data;
@@ -152,7 +152,7 @@ void send_msgs(cpg_handle_t handle, int no_msgs)
 	refill_data = 1;
 
 	for (i = 0; i < no_msgs; i++) {
-		err = send_msg(handle, refill_data);
+		err = send_msg(handle, refill_data, max_msg_len);
 		refill_data = 0;
 		if (err == CS_OK) {
 			last_msg++;
@@ -226,6 +226,7 @@ static void usage(void)
 	printf("Usage: [-q] [-n num]\n");
 	printf(" -q         Quiet mode (only err messages are displayed)\n");
 	printf(" -n num     Number of messages in one burst\n");
+	printf(" -l msg_len Maximum message length\n");
 
 	exit(1);
 }
@@ -251,6 +252,7 @@ int main (int argc, char *argv[]) {
 	struct cpg_name group_name;
 	char *ep;
 	long num = 1;
+	long max_msg_len = MAX_MSG_LEN;
 	int ch;
 	struct pollfd pfd;
 	int retries;
@@ -258,7 +260,7 @@ int main (int argc, char *argv[]) {
 	last_msg = 0;
 	last_expected = 0;
 
-	while ((ch = getopt(argc, argv, "qhn:")) != -1) {
+	while ((ch = getopt(argc, argv, "qhl:n:")) != -1) {
 		switch (ch) {
 		case 'q':
 			quiet = 1;
@@ -267,6 +269,13 @@ int main (int argc, char *argv[]) {
 			num = strtol(optarg, &ep, 10);
 			if (num <= 0 || *ep != '\0') {
 				warnx("illegal number, -n argument -- %s", optarg);
+				usage();
+			}
+			break;
+		case 'l':
+			max_msg_len = strtol(optarg, &ep, 10);
+			if (max_msg_len <= 0 || *ep != '\0' || max_msg_len > MAX_MSG_LEN) {
+				warnx("illegal number, -l argument -- %s", optarg);
 				usage();
 			}
 			break;
@@ -319,7 +328,7 @@ int main (int argc, char *argv[]) {
 		}
 
 		if (last_expected == last_msg) {
-			send_msgs(handle, num);
+			send_msgs(handle, num, max_msg_len);
 		}
 
 		if (result == 1 && pfd.revents & POLLIN) {
