@@ -252,7 +252,7 @@ int main (int argc, char *argv[]) {
 	struct cpg_name group_name;
 	char *ep;
 	long num = 1;
-	long max_msg_len = MAX_MSG_LEN;
+	long max_msg_len = 4096;
 	int ch;
 	struct pollfd pfd;
 	int retries;
