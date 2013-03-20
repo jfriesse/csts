@@ -252,7 +252,7 @@ int main (int argc, char *argv[]) {
 	struct cpg_name group_name;
 	char *ep;
 	long num = 1;
-	long max_msg_len = 4096;
+	long max_msg_len = 0;
 	int ch;
 	struct pollfd pfd;
 	int retries;
@@ -284,6 +284,13 @@ int main (int argc, char *argv[]) {
 		default:
 			usage();
 			/* NOTREACHED */
+		}
+	}
+
+	if (max_msg_len == 0) {
+		max_msg_len = 16368 * 1400 / num;
+		if (max_msg_len > MAX_MSG_LEN) {
+			max_msg_len = MAX_MSG_LEN;
 		}
 	}
 
