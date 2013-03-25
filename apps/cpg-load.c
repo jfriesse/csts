@@ -288,7 +288,7 @@ int main (int argc, char *argv[]) {
 	}
 
 	if (max_msg_len == 0) {
-		max_msg_len = 16368 * 1400 / num;
+		max_msg_len = 16368 * 1100 / num;
 		if (max_msg_len > MAX_MSG_LEN) {
 			max_msg_len = MAX_MSG_LEN;
 		}
