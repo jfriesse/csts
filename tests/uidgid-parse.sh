@@ -10,14 +10,28 @@ test_corover_undefined_enabled=false
 
 gen_conf() {
     cat
-    echo "uidgid {"
+
+    tmp=`mktemp`
+
+    echo "uidgid {" >"$tmp"
     if [ "$conf_uid" != "" ];then
-        echo "    uid: $conf_uid"
+        echo "    uid: $conf_uid" >>"$tmp"
     fi
     if [ "$conf_gid" != "" ];then
-        echo "    gid: $conf_gid"
+        echo "    gid: $conf_gid" >>"$tmp"
     fi
-    echo "}"
+    echo "}" >> "$tmp"
+
+    if $use_uidgidd;then
+	cat "$tmp" | run "$nodes_ip" "cat > /etc/corosync/uidgid.d/csts-uidgid-parse.conf"
+    else
+	cat "$tmp"
+    fi
+    rm -f "$tmp"
+}
+
+exit_trap_end_cb() {
+    run "$nodes_ip" "rm -f /etc/corosync/uidgid.d/csts-uidgid-parse.conf"
 }
 
 gen_conf_needle_error() {
@@ -38,22 +52,7 @@ check_uidgid_exists() {
     fi
 }
 
-for ((i=0; i<2; i++));do
-    conf_uid=""
-    conf_gid=""
-
-    case "$i" in
-    "0")
-        conf_uid="nonexistinguid"
-        ;;
-    "1")
-        conf_gid="nonexistinggid"
-        ;;
-    esac
-
-    configure_corosync "$nodes_ip" gen_conf
-    start_corosync "$nodes_ip" && exit 1 || true
-done
+run "$nodes_ip" "mkdir -p /etc/corosync/uidgid.d/"
 
 # Needle parser throws error if uidgid contains item other then uid|gid
 if [ "$corosync_version" == "needle" ];then
@@ -61,40 +60,60 @@ if [ "$corosync_version" == "needle" ];then
     start_corosync "$nodes_ip" && exit 1 || true
 fi
 
-for ((i=0; i<4; i++));do
-    conf_uid=""
-    conf_gid=""
 
-    case "$i" in
-    "0")
-        conf_uid="nobody"
-        res_uid=$conf_uid
-        if [ "$corosync_version" == "needle" ];then
-            res_uid=`run "$nodes_ip" "id -r -u $conf_uid"`
-        fi
-        ;;
-    "1")
-        conf_gid="nobody"
-        res_gid=$conf_gid
-        if [ "$corosync_version" == "needle" ];then
-            res_gid=`run "$nodes_ip" "id -r -g $conf_gid"`
-        fi
-        ;;
-    "2")
-        conf_uid="99"
-        res_uid=$conf_uid
-        ;;
-    "3")
-        conf_gid="99"
-        res_gid=$conf_gid
-        ;;
-    esac
+for use_uidgidd in false true;do
+    for ((i=0; i<2; i++));do
+        conf_uid=""
+        conf_gid=""
 
-    configure_corosync "$nodes_ip" gen_conf
-    start_corosync "$nodes_ip"
-    check_uidgid_exists `[ "$conf_uid" != "" ] && echo "uid" || echo "gid"` \
-        `[ "$conf_uid" != "" ] && echo "$res_uid" || echo "$res_gid"`
-    stop_corosync "$nodes_ip"
+        case "$i" in
+        "0")
+            conf_uid="nonexistinguid"
+            ;;
+        "1")
+            conf_gid="nonexistinggid"
+            ;;
+        esac
+
+        configure_corosync "$nodes_ip" gen_conf
+        start_corosync "$nodes_ip" && exit 1 || true
+    done
+
+    for ((i=0; i<4; i++));do
+        conf_uid=""
+        conf_gid=""
+
+        case "$i" in
+        "0")
+            conf_uid="nobody"
+            res_uid=$conf_uid
+            if [ "$corosync_version" == "needle" ];then
+                res_uid=`run "$nodes_ip" "id -r -u $conf_uid"`
+            fi
+            ;;
+        "1")
+            conf_gid="nobody"
+            res_gid=$conf_gid
+            if [ "$corosync_version" == "needle" ];then
+                res_gid=`run "$nodes_ip" "id -r -g $conf_gid"`
+            fi
+            ;;
+        "2")
+            conf_uid="99"
+            res_uid=$conf_uid
+            ;;
+        "3")
+            conf_gid="99"
+            res_gid=$conf_gid
+            ;;
+        esac
+
+        configure_corosync "$nodes_ip" gen_conf
+        start_corosync "$nodes_ip"
+        check_uidgid_exists `[ "$conf_uid" != "" ] && echo "uid" || echo "gid"` \
+            `[ "$conf_uid" != "" ] && echo "$res_uid" || echo "$res_gid"`
+        stop_corosync "$nodes_ip"
+    done
 done
 
 exit 0
