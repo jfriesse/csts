@@ -113,7 +113,7 @@ generate_corosync_conf() {
 configure_corosync() {
     local node="$1"
 
-    if run "$node" "[ -f /etc/corosync/corosync.conf ]";then
+    if run "$node" "[ -f /etc/corosync/corosync.conf ]" && ! run "$node" "[ -f $test_var_dir/corosync.conf.bck ]";then
 	run "$node" "mv /etc/corosync/corosync.conf $test_var_dir/corosync.conf.bck"
     fi
 
