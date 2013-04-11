@@ -22,6 +22,7 @@ usage() {
     echo "  -n              space separated nodes where test is executed"
     echo "  -i              print parseable test informations"
     echo "  -c              corosync version (flatiron|needle)"
+    echo "  -v              use valgrind for corosync start"
 
     exit 1
 }
@@ -126,8 +127,11 @@ start_corosync() {
     local probe_command
 
     run "$node" 'echo --- MARKER --- '$0' at `date +"%F-%T"` --- MARKER --- >> /var/log/cluster/corosync.log'
-    run "$node" "corosync" || return $?
-
+    if $use_valgrind;then
+        run "$node" "valgrind --log-file=/var/log/csts-vg-corosync.log corosync" || return $?
+    else
+        run "$node" "corosync" || return $?
+    fi
 # Doesn't work for flatiron
 #    probe_command='corosync-cfgtool -s > /dev/null 2>&1'
     probe_command='corosync-cpgtool > /dev/null 2>&1'
@@ -138,6 +142,16 @@ start_corosync() {
     done
 
     [ "$no_retries" -lt 20 ] && return 0 || return 1
+}
+
+# cat_valgrind_log [delete_after_cat]
+cat_valgrind_log() {
+    if run "$node" "[ -f /var/log/csts-vg-corosync.log ]";then
+	run "$node" "cat /var/log/csts-vg-corosync.log"
+	if [ "$1" == true ];then
+	    run "$node" "rm -f /var/log/csts-vg-corosync.log"
+	fi
+    fi
 }
 
 # stop_corosync [use_corosync-cfgtool]
@@ -157,10 +171,14 @@ stop_corosync() {
 	no_retries=$(($no_retries + 1))
     done
 
+    if $use_valgrind;then
+        cat_valgrind_log true
+    fi
+
     if [ "$no_retries" -lt 20 ];then
 	return 0
     else
-        if ! run "$node" "[ -f /var/run/corosync.pid ]" && ! run "$node" "pgrep corosync &>/dev/null";then
+        if ! run "$node" "[ -f /var/run/corosync.pid ]" && ! run "$node" "pgrep -f corosync &>/dev/null";then
             return 0
         else
             return 1
@@ -171,7 +189,12 @@ stop_corosync() {
 kill_corosync() {
     local node="$1"
 
-    run "$node" 'killall -9 corosync'
+    if $use_valgrind;then
+        run "$node" 'pgrep -f -9 corosync'
+        cat_valgrind_log true
+    else
+        run "$node" 'killall -9 corosync'
+    fi
 }
 
 corosync_mem_used() {
@@ -302,8 +325,9 @@ test_apps_dir="~/csts-apps"
 test_var_dir="/var/csts"
 corosync_running=0
 corosync_version="undefined"
+use_valgrind=false
 
-while getopts "hic:n:" optflag; do
+while getopts "hivc:n:" optflag; do
     case "$optflag" in
     h)
         usage
@@ -324,6 +348,9 @@ while getopts "hic:n:" optflag; do
 	echo "test_corover_needle_enabled=$test_corover_needle_enabled"
 	exit 0
 	;;
+    v)
+        use_valgrind=true
+        ;;
     \?|:)
         usage
         ;;
