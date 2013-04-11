@@ -19,7 +19,7 @@ for i in 1 3 6;do
     pause_corosync "$nodes_ip"
     sleep $i
     unpause_corosync "$nodes_ip"
-    ! cat_corosync_log "$nodes_ip" | grep 'Corosync main process was not scheduled for .* ms'
+    cat_corosync_log "$nodes_ip" | grep 'Corosync main process was not scheduled for .* ms' && exit 1 || true
 done
 
 for i in 9;do
