@@ -190,7 +190,7 @@ kill_corosync() {
     local node="$1"
 
     if $use_valgrind;then
-        run "$node" 'pgrep -f -9 corosync'
+        run "$node" 'pkill -f -9 corosync'
         cat_valgrind_log true
     else
         run "$node" 'killall -9 corosync'
