@@ -128,7 +128,7 @@ start_corosync() {
 
     run "$node" 'echo --- MARKER --- '$0' at `date +"%F-%T"` --- MARKER --- >> /var/log/cluster/corosync.log'
     if $use_valgrind;then
-        run "$node" "valgrind --log-file=/var/log/csts-vg-corosync.log corosync" || return $?
+        run "$node" "nohup valgrind corosync -f &> /var/log/csts-vg-corosync.log & echo" || return $?
     else
         run "$node" "corosync" || return $?
     fi
