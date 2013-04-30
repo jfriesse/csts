@@ -119,13 +119,20 @@ usage(void) {
 }
 
 static void
-sigint_handler(int sig)
+sigint_handler_parent(int sig)
 {
 	int i;
 
 	for (i = 0; i < no_childs; i++) {
 		kill(child_pids[i], SIGINT);
 	}
+}
+
+static void
+sigint_handler_child(int sig)
+{
+
+	exit(0);
 }
 
 int
@@ -183,6 +190,8 @@ main(int argc, char *argv[])
 
 	signal(SIGPIPE, SIG_IGN);
 
+	setlinebuf(stdout);
+
 	memset(&callbacks, 0, sizeof(callbacks));
 	assert(confdb_initialize(&handle, &callbacks) == CS_OK);
 	assert(confdb_object_create(handle, OBJECT_PARENT_HANDLE,
@@ -225,6 +234,8 @@ main(int argc, char *argv[])
 	}
 
 	if (my_id > 0) {
+		signal(SIGINT, sigint_handler_child);
+
 		assert(confdb_track_changes(handle, object_handle, OBJECT_KEY_REPLACED) == CS_OK);
 
 		if (change_uint32) {
@@ -249,7 +260,8 @@ main(int argc, char *argv[])
 			res = confdb_dispatch(handle, CS_DISPATCH_BLOCKING);
 		} while (res == CS_OK || res == CS_ERR_TRY_AGAIN);
 	} else {
-		signal(SIGINT, sigint_handler);
+		signal(SIGINT, sigint_handler_parent);
+
 		for (i = 0; i < no_childs; i++) {
 			wait(&status);
 		}
