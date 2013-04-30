@@ -26,6 +26,7 @@ static int no_childs;
 static int burst_count;
 static int change_uint32;
 static int change_str_len;
+static pid_t *child_pids;
 
 static void
 inc_str(char *str, int str_len)
@@ -88,12 +89,16 @@ create_childs(void)
 	pid_t pid;
 	int i;
 
+	assert((child_pids = malloc(no_childs * sizeof(pid_t))) != NULL);
+
 	for (i = 1; i <= no_childs; i++) {
 		pid = fork();
 		assert(pid >= 0);
 		if (pid == 0) {
 			return (i);
 		}
+
+		child_pids[i - 1] = pid;
 	}
 
 	return (0);
@@ -111,6 +116,16 @@ usage(void) {
 	printf(" -n burst_count Number of changes in burst (default 64)\n");
 
 	exit(1);
+}
+
+static void
+sigint_handler(int sig)
+{
+	int i;
+
+	for (i = 0; i < no_childs; i++) {
+		kill(child_pids[i], SIGINT);
+	}
 }
 
 int
@@ -234,6 +249,7 @@ main(int argc, char *argv[])
 			res = confdb_dispatch(handle, CS_DISPATCH_BLOCKING);
 		} while (res == CS_OK || res == CS_ERR_TRY_AGAIN);
 	} else {
+		signal(SIGINT, sigint_handler);
 		for (i = 0; i < no_childs; i++) {
 			wait(&status);
 		}
