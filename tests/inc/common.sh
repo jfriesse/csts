@@ -121,17 +121,17 @@ configure_corosync() {
     generate_corosync_conf "$node" "$2"
 }
 
-start_corosync() {
+start_corosync_insert_marker() {
+    local node="$1"
+
+    run "$node" 'echo --- MARKER --- '$0' at `date +"%F-%T"` --- MARKER --- >> /var/log/cluster/corosync.log'
+}
+
+start_corosync_wait_for_start() {
     local node="$1"
     local no_retries=0
     local probe_command
 
-    run "$node" 'echo --- MARKER --- '$0' at `date +"%F-%T"` --- MARKER --- >> /var/log/cluster/corosync.log'
-    if $use_valgrind;then
-        run "$node" "nohup valgrind corosync -f &> /var/log/csts-vg-corosync.log & echo" || return $?
-    else
-        run "$node" "corosync" || return $?
-    fi
 # Doesn't work for flatiron
 #    probe_command='corosync-cfgtool -s > /dev/null 2>&1'
     probe_command='corosync-cpgtool > /dev/null 2>&1'
@@ -142,6 +142,22 @@ start_corosync() {
     done
 
     [ "$no_retries" -lt 20 ] && return 0 || return 1
+}
+
+start_corosync() {
+    local node="$1"
+
+    start_corosync_insert_marker "$node"
+
+    if $use_valgrind;then
+        run "$node" "nohup valgrind corosync -f &> /var/log/csts-vg-corosync.log & echo" || return $?
+    else
+        run "$node" "corosync" || return $?
+    fi
+
+    start_corosync_wait_for_start "$node" || return $?
+
+    return 0
 }
 
 # cat_valgrind_log [delete_after_cat]
