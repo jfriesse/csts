@@ -1,12 +1,20 @@
 /*
- * Track object in confdb for changes in multiple process and when callback is called,
+ * Track object in confdb/cmap for changes in multiple process and when callback is called,
  * eventually do no_burst changes. This will make a HUGE load to confdb.
  */
 
 #include <stdio.h>
 
 #include <corosync/corotypes.h>
+
+#ifdef USE_CONFDB
 #include <corosync/confdb.h>
+#endif
+
+#ifdef USE_CMAP
+#include <corosync/cmap.h>
+#endif
+
 #include <assert.h>
 
 #include <sys/types.h>
@@ -16,6 +24,18 @@
 #include <string.h>
 #include <err.h>
 #include <poll.h>
+
+#ifdef USE_CMAP
+#define cs_repeat(counter, max, code) do {      \
+	code;                                   \
+	if (result == CS_ERR_TRY_AGAIN) {       \
+		counter++;                      \
+		sleep(1);                       \
+	} else {                                \
+		break;                          \
+	}                                       \
+} while (counter < max)
+#endif
 
 static char my_key_uint[255];
 static char my_key_str[255];
@@ -40,6 +60,7 @@ inc_str(char *str, int str_len)
 	}
 }
 
+#ifdef USE_CONFDB
 static void
 confdb_key_change_notify (
 	confdb_handle_t handle,
@@ -84,6 +105,49 @@ confdb_key_change_notify (
 		}
 	}
 }
+#endif
+
+#ifdef USE_CMAP
+static void cmap_notify(
+	cmap_handle_t cmap_handle,
+	cmap_track_handle_t cmap_track_handle,
+	int32_t event,
+	const char *key_name,
+	struct cmap_notify_value new_value,
+	struct cmap_notify_value old_value,
+	void *user_data)
+{
+	char str_val[255];
+	int i;
+
+	if (strlen(key_name) == strlen(my_key_uint) && memcmp(key_name, my_key_uint, strlen(key_name)) == 0) {
+		expected_msgs_uint--;
+
+		if (expected_msgs_uint == 0) {
+			for (i = 0; i < burst_count; i++) {
+				cmap_inc(cmap_handle, key_name);
+			}
+			expected_msgs_uint = burst_count;
+		}
+	}
+
+	if (strlen(key_name) == strlen(my_key_str) && memcmp(key_name, my_key_str, strlen(key_name)) == 0) {
+		expected_msgs_str--;
+
+		if (expected_msgs_str == 0) {
+			memcpy(str_val, new_value.data, new_value.len);
+			str_val[new_value.len - 1] = '\0';
+
+			for (i = 0; i < burst_count; i++) {
+				inc_str(str_val, new_value.len - 1);
+				cmap_set_string(cmap_handle, my_key_str, str_val);
+			}
+			expected_msgs_str = burst_count;
+		}
+	}
+
+}
+#endif
 
 static int
 create_childs(void)
@@ -176,9 +240,17 @@ sigint_handler_child(int sig)
 int
 main(int argc, char *argv[])
 {
+#ifdef USE_CONFDB
 	confdb_handle_t handle;
 	confdb_callbacks_t callbacks;
 	hdb_handle_t object_handle;
+#endif
+#ifdef USE_CMAP
+	cmap_handle_t handle;
+	cmap_track_handle_t track_handle;
+	int retries;
+	cs_error_t result;
+#endif
 	uint32_t u32;
 	int status;
 	int i;
@@ -230,37 +302,65 @@ main(int argc, char *argv[])
 
 	setlinebuf(stdout);
 
+#ifdef USE_CONFDB
 	memset(&callbacks, 0, sizeof(callbacks));
 	assert(confdb_initialize(&handle, &callbacks) == CS_OK);
 	assert(confdb_object_create(handle, OBJECT_PARENT_HANDLE,
 		"testconfdb", strlen("testconfdb"), &object_handle) == CS_OK);
 	assert(confdb_finalize(handle) == CS_OK);
+#endif
 
 	my_id = create_childs();
 	u32 = my_id;
 
+#ifdef USE_CONFDB
 	snprintf(my_key_uint, sizeof(my_key_uint), "testkeyu32id%u", my_id);
 
 	snprintf(my_key_str, sizeof(my_key_str), "testkeystrid%u", my_id);
+#endif
+
+#ifdef USE_CMAP
+	snprintf(my_key_uint, sizeof(my_key_uint), "testconfdb.testkeyu32id%u", my_id);
+
+	snprintf(my_key_str, sizeof(my_key_str), "testconfdb.testkeystrid%u", my_id);
+#endif
+
 	for (i = 0; i < change_str_len; i++) {
 		str_val[i] = ((my_id + i) % ('Z' - 'A' + 1)) + 'A';
 	}
 	str_val[i] = '\0';
 
 	if (my_id > 0) {
+#ifdef USE_CONFDB
 		memset(&callbacks, 0, sizeof(callbacks));
 		callbacks.confdb_key_change_notify_fn = confdb_key_change_notify;
 
 		assert(confdb_initialize(&handle, &callbacks) == CS_OK);
+#endif
 
+#ifdef USE_CMAP
+		retries = 0;
+		cs_repeat(retries, 30, result = cmap_initialize(&handle));
+		assert(result == CS_OK);
+#endif
 		if (change_uint32) {
+#ifdef USE_CONFDB
 			assert(confdb_key_create_typed(handle, object_handle, my_key_uint,
 				&u32, sizeof(u32), CONFDB_VALUETYPE_UINT32) == CS_OK);
+#endif
+#ifdef USE_CMAP
+			assert(cmap_set_uint32(handle, my_key_uint, u32) == CS_OK);
+#endif
 		}
 
 		if (change_str_len > 0) {
+#ifdef USE_CONFDB
 			assert(confdb_key_create_typed(handle, object_handle, my_key_str,
 				str_val, strlen(str_val), CONFDB_VALUETYPE_STRING) == CS_OK);
+#endif
+#ifdef USE_CMAP
+			assert(cmap_set_string(handle, my_key_str, str_val) == CS_OK);
+#endif
 		}
 	} else {
 		/*
@@ -274,18 +374,35 @@ main(int argc, char *argv[])
 	if (my_id > 0) {
 		signal(SIGINT, sigint_handler_child);
 
+#ifdef USE_CONFDB
 		assert(confdb_track_changes(handle, object_handle, OBJECT_KEY_REPLACED) == CS_OK);
+#endif
+
+#ifdef USE_CMAP
+		assert(cmap_track_add(handle, "testconfdb.", CMAP_TRACK_MODIFY | CMAP_TRACK_PREFIX,
+			cmap_notify, NULL, &track_handle) == CS_OK);
+#endif
 
 		if (change_uint32) {
+#ifdef USE_CONFDB
 			assert(confdb_key_increment(handle, object_handle, my_key_uint,
 						strlen(my_key_uint), &u32) == CS_OK);
+#endif
+#ifdef USE_CMAP
+			assert(cmap_inc(handle, my_key_uint) == CS_OK);
+#endif
 			expected_msgs_uint = 1;
 		}
 
 		if (change_str_len > 0) {
 			inc_str(str_val, change_str_len);
+#ifdef USE_CONFDB
 			assert(confdb_key_replace(handle, object_handle, my_key_str, strlen(my_key_str), NULL, 0,
 					str_val, strlen(str_val)) == CS_OK);
+#endif
+#ifdef USE_CMAP
+			assert(cmap_set_string(handle, my_key_str, str_val) == CS_OK);
+#endif
 			expected_msgs_str = 1;
 		}
 
@@ -295,7 +412,12 @@ main(int argc, char *argv[])
 		poll(NULL, 0, 250);
 
 		do {
+#ifdef USE_CONFDB
 			res = confdb_dispatch(handle, CS_DISPATCH_BLOCKING);
+#endif
+#ifdef USE_CMAP
+			res = cmap_dispatch(handle, CS_DISPATCH_BLOCKING);
+#endif
 		} while (res == CS_OK || res == CS_ERR_TRY_AGAIN);
 	} else {
 		signal(SIGINT, sigint_handler_parent);
@@ -304,7 +426,9 @@ main(int argc, char *argv[])
 			wait(&status);
 		}
 
+#ifdef USE_CONFDB
 		confdb_object_destroy(handle, object_handle);
+#endif
 		printf("Finalization finished\n");
 	}
 
