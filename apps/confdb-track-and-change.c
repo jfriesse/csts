@@ -27,6 +27,8 @@ static int burst_count;
 static int change_uint32;
 static int change_str_len;
 static pid_t *child_pids;
+static int *child_pipes;
+static int master_pipe;
 
 static void
 inc_str(char *str, int str_len)
@@ -88,17 +90,27 @@ create_childs(void)
 {
 	pid_t pid;
 	int i;
+	int pipe_fd[2];
 
 	assert((child_pids = malloc(no_childs * sizeof(pid_t))) != NULL);
+	assert((child_pipes = malloc(no_childs * sizeof(int))) != NULL);
 
 	for (i = 1; i <= no_childs; i++) {
+		assert(pipe(pipe_fd) == 0);
+
 		pid = fork();
 		assert(pid >= 0);
 		if (pid == 0) {
+			master_pipe = pipe_fd[1];
+			close(pipe_fd[0]);
+
 			return (i);
 		}
 
 		child_pids[i - 1] = pid;
+
+		child_pipes[i - 1] = pipe_fd[0];
+		close(pipe_fd[1]);
 	}
 
 	return (0);
@@ -121,11 +133,37 @@ usage(void) {
 static void
 sigint_handler_parent(int sig)
 {
-	int i;
+	int i, j;
+	struct pollfd *pfds;
+	int nfds;
+	int res;
 
-	for (i = 0; i < no_childs; i++) {
-		kill(child_pids[i], SIGINT);
-	}
+	assert((pfds = malloc(no_childs * sizeof(*pfds))) != NULL);
+
+	do {
+		nfds = 0;
+		for (i = 0; i < no_childs; i++) {
+			if (child_pipes[i] != 0) {
+				kill(child_pids[i], SIGINT);
+
+				pfds[nfds].events = 0;
+				pfds[nfds].revents = 0;
+				pfds[nfds++].fd = child_pipes[i];
+			}
+		}
+
+		res = poll(pfds, nfds, 100);
+
+		for (j = 0; j < res; j++) {
+			for (i = 0; i < no_childs; i++) {
+				if (child_pipes[i] == pfds[j].fd) {
+					if (pfds[j].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+						child_pipes[i] = 0;
+					}
+				}
+			}
+		}
+	} while (nfds > 0);
 }
 
 static void
