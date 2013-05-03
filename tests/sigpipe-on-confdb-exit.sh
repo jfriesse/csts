@@ -7,8 +7,6 @@ test_description="Test that closing confdb client in connecting state doesn't en
 
 . inc/common.sh
 
-pids=""
-
 compile_confdb_app "$nodes_ip" "confdb-track-and-change"
 
 configure_corosync "$nodes_ip"
