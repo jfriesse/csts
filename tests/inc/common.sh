@@ -85,6 +85,18 @@ compile_app() {
     run "$node" "cc $test_apps_dir/$app.c $libs -o $test_apps_dir/$app"
 }
 
+compile_confdb_app() {
+    local node="$1"
+    local app="$2"
+    local libs="$3"
+
+    if run "$nodes_ip" 'cat /usr/include/corosync/cmap.h' &>/dev/null;then
+	compile_app "$node" "$app" "-lcmap -DUSE_CMAP $libs"
+    else
+	compile_app "$node" "$app" "-lconfdb -DUSE_CONFDB $libs"
+    fi
+}
+
 run_app() {
     local node="$1"
     local app="$2"

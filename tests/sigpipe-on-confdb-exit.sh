@@ -10,13 +10,7 @@ test_corover_undefined_enabled=false
 
 pids=""
 
-if [ "$corosync_version" == "flatiron" ];then
-    compile_app "$nodes_ip" "confdb-track-and-change" "-DUSE_CONFDB -lconfdb"
-fi
-
-if [ "$corosync_version" == "needle" ];then
-    compile_app "$nodes_ip" "confdb-track-and-change" "-DUSE_CMAP -lcmap"
-fi
+compile_confdb_app "$nodes_ip" "confdb-track-and-change"
 
 configure_corosync "$nodes_ip"
 
