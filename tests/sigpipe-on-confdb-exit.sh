@@ -4,7 +4,6 @@
 #
 
 test_description="Test that closing confdb client in connecting state doesn't end with SIGPIPE in daemon"
-test_corover_undefined_enabled=false
 
 . inc/common.sh
 
