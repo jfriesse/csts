@@ -368,7 +368,7 @@ main(int argc, char *argv[])
 		 */
 		poll(NULL, 0, 1000);
 
-		printf("Initialization finished\n");
+		printf("Confdb-track-and-change initialization finished\n");
 	}
 
 	if (my_id > 0) {
@@ -429,7 +429,7 @@ main(int argc, char *argv[])
 #ifdef USE_CONFDB
 		confdb_object_destroy(handle, object_handle);
 #endif
-		printf("Finalization finished\n");
+		printf("Confdb-track-and-change finalization finished\n");
 	}
 
 	return (0);
