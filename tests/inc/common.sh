@@ -156,15 +156,17 @@ start_corosync_wait_for_start() {
     [ "$no_retries" -lt 20 ] && return 0 || return 1
 }
 
+#start_corosync node [corosync_parameter]
 start_corosync() {
     local node="$1"
+    local corosync_param="$2"
 
     start_corosync_insert_marker "$node"
 
     if $use_valgrind;then
-        run "$node" "nohup valgrind corosync -f &> /var/log/csts-vg-corosync.log & echo" || return $?
+        run "$node" "nohup valgrind corosync -f $corosync_param &> /var/log/csts-vg-corosync.log & echo" || return $?
     else
-        run "$node" "corosync" || return $?
+        run "$node" "corosync $corosync_param" || return $?
     fi
 
     start_corosync_wait_for_start "$node" || return $?
