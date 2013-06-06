@@ -19,6 +19,8 @@ for i in 1 3 6;do
     pause_corosync "$nodes_ip"
     sleep $i
     unpause_corosync "$nodes_ip"
+    # Give a corosync a little time to wake up
+    sleep 1
     cat_corosync_log "$nodes_ip" | grep 'Corosync main process was not scheduled for .* ms' && exit 1 || true
 done
 
@@ -26,6 +28,8 @@ for i in 9;do
     pause_corosync "$nodes_ip"
     sleep $i
     unpause_corosync "$nodes_ip"
+    # Give a corosync a little time to wake up
+    sleep 1
     cat_corosync_log "$nodes_ip" | grep 'Corosync main process was not scheduled for .* ms'
 done
 
