@@ -17,7 +17,7 @@
 
 #define BUF_SIZE 4096
 
-int
+static int
 create_client_socket(char *path)
 {
 	int s;
@@ -38,7 +38,7 @@ create_client_socket(char *path)
 	return (s);
 }
 
-int
+static int
 read_write_loop(FILE *input_file, int remote_sock)
 {
 	char buf[BUF_SIZE];
