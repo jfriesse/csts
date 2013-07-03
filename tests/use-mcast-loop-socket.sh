@@ -11,12 +11,12 @@ exit_trap_end_cb() {
     run "$nodes_ip" "iptables -D INPUT ! -i lo -p udp -j DROP && iptables -D OUTPUT ! -o lo -p udp -j DROP"
 }
 
-compile_app "$nodes_ip" "testcpg" "-lcpg"
+compile_app "$nodes_ip" "cpg-cli-client" "-lcpg"
 
 run "$nodes_ip" "iptables -A INPUT ! -i lo -p udp -j DROP && iptables -A OUTPUT ! -o lo -p udp -j DROP"
 configure_corosync "$nodes_ip"
 start_corosync "$nodes_ip"
 
-echo "EXIT" | run_app "$nodes_ip" 'testcpg' > /dev/null
+echo -e "sync\nexit\n" | run_app "$nodes_ip" 'cpg-cli-client'
 
 exit 0
