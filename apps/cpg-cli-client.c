@@ -469,6 +469,7 @@ main(int argc, char *argv[]) {
 	char ch;
 	char *cpg_group_name_str;
 	struct pollfd pfd[2];
+	int retries;
 
 	cpg_group_name_str = "CPGCLICLIENT";
 
@@ -494,7 +495,16 @@ main(int argc, char *argv[]) {
 		exit (1);
 	}
 
-	result = cpg_join(handle, &group_name);
+	retries = 0;
+	while (retries < 45) {
+		result = cpg_join(handle, &group_name);
+		if (result != CS_ERR_TRY_AGAIN) {
+			break ;
+		}
+
+		retries++;
+		sleep(1);
+	}
 	if (result != CS_OK) {
 		fprintf(stderr, "Could not join process group, error %d\n", result);
 		exit (1);
