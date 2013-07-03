@@ -112,6 +112,7 @@ send_msg(cpg_handle_t handle, char msg_type, uint64_t seq_no, uint32_t max_msg_l
 	static unsigned char data[MAX_MSG_LEN];
 	struct my_msg msg;
 	cs_error_t result;
+	int retries;
 
 	msg.msg_type = msg_type;
 	msg.seq_no = seq_no;
@@ -148,7 +149,18 @@ send_msg(cpg_handle_t handle, char msg_type, uint64_t seq_no, uint32_t max_msg_l
 		fprintf(stdout, "%"PRIu32":%04x\n", msg.data_len, msg.chsum);
 		break;
 	}
-	result = cpg_mcast_joined (handle, CPG_TYPE_AGREED, iov, 2);
+
+	retries = 0;
+	while (retries < 45) {
+		result = cpg_mcast_joined(handle, CPG_TYPE_AGREED, iov, 2);
+		if (result != CS_ERR_TRY_AGAIN) {
+			break ;
+		}
+
+		retries++;
+		sleep(1);
+	}
+
 	if (result != CS_OK) {
 		errx(1, "cpg_mcast_joined result %u != CS_OK", result);
 	}
