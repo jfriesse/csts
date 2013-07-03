@@ -6,6 +6,7 @@
 test_description="Test that corosync doesn't crash on FAILED TO RECEIVE condition"
 test_required_nodes=2
 test_max_nodes=2
+test_max_runtime=600
 
 . inc/common.sh
 
@@ -29,19 +30,13 @@ configure_corosync "$node_b"
 start_corosync "$node_a"
 start_corosync "$node_b"
 
-compile_app "$node_b" "testcpg" "-lcpg"
+compile_app "$node_b" "cpg-cli-client" "-lcpg"
 
 run "$node_a" "iptables -A INPUT ! -i lo -p udp -m limit --limit 10000/s --limit-burst 1 -j ACCEPT"
 run "$node_a" "iptables -A INPUT ! -i lo -p udp ! --sport domain -j DROP"
 
-(echo "Sending 10000 messages"
- set +x
- for ((i=0;i<10000;i++));do 
-    echo "TEST MSG $i"
-    sleep 0.001
- done
- sleep 1
- echo "EXIT") | run_app "$node_b" 'testcpg' >/dev/null
+echo "Sending 15000 messages"
+echo -e "sendrandburst 15000 1 16\nsync\nexit" | run_app "$node_b" 'cpg-cli-client' > /dev/null
 
 [ "`run $node_a 'pidof corosync'`" == "`run $node_a 'cat /var/run/corosync.pid'`" ] && \
     [ "`run $node_b 'pidof corosync'`" == "`run $node_b 'cat /var/run/corosync.pid'`" ]
