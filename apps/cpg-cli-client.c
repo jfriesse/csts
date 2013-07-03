@@ -52,7 +52,7 @@ struct my_msg {
 };
 
 static void
-print_basic_iso_datetime(void)
+print_basic_iso_datetime(FILE *out)
 {
 	time_t t;
 	struct tm *tmp;
@@ -67,7 +67,7 @@ print_basic_iso_datetime(void)
 	if (strftime(time_str, sizeof(time_str), "%Y%m%dT%H%M%S", tmp) == 0) {
 		exit (3);
 	}
-	printf("%s", time_str);
+	fprintf(out, "%s", time_str);
 }
 
 static void
@@ -137,7 +137,7 @@ send_msg(cpg_handle_t handle, char msg_type, uint64_t seq_no, uint32_t max_msg_l
 	iov[1].iov_base = (void *)data;
 	iov[1].iov_len = msg.data_len;
 
-	print_basic_iso_datetime();
+	print_basic_iso_datetime(stdout);
 	fprintf(stdout, ":Sending:");
 	switch (msg_type) {
 	case MSG_TYPE_STR:
@@ -177,7 +177,7 @@ ConfchgCallback(cpg_handle_t handle,
 {
 	int i;
 
-	print_basic_iso_datetime();
+	print_basic_iso_datetime(stdout);
 	printf(":ConfchgCallback:");
 	print_cpgname(groupName);
 	printf(":");
@@ -216,7 +216,7 @@ TotemConfchgCallback(cpg_handle_t handle,
 {
 	int i;
 
-	print_basic_iso_datetime();
+	print_basic_iso_datetime(stdout);
 	printf(":TotemConfchgCallback:%x.%"PRIx64, ring_id.nodeid, ring_id.seq);
 	printf(":");
 
@@ -233,8 +233,8 @@ static void
 print_error_msg_start(uint32_t nodeid, uint32_t pid)
 {
 
-	print_basic_iso_datetime();
-	fprintf(stdout, ":Error:(%"PRIx32" %"PRIx32"):", nodeid, pid);
+	print_basic_iso_datetime(stderr);
+	fprintf(stderr, ":Error:(%"PRIx32" %"PRIx32"):", nodeid, pid);
 }
 
 static void
@@ -248,7 +248,7 @@ DeliverCallback(cpg_handle_t handle,
 	struct my_msg *msg = (struct my_msg *)cpg_msg;
 	uint32_t chsum, expected_chsum;
 
-	print_basic_iso_datetime();
+	print_basic_iso_datetime(stdout);
 	fprintf(stdout, ":Arrived:(%"PRIx32" %"PRIx32"):", nodeid, pid);
 	switch (msg->msg_type) {
 	case MSG_TYPE_STR:
@@ -270,7 +270,7 @@ DeliverCallback(cpg_handle_t handle,
 
 	if ((msg->data_len + sizeof(*msg)) != cpg_msg_len) {
 		print_error_msg_start(nodeid, pid);
-		fprintf(stdout, "Incorrect message length %"PRIu32"+%zu != %zu\n", msg->data_len, sizeof(*msg), cpg_msg_len);
+		fprintf(stderr, "Incorrect message length %"PRIu32"+%zu != %zu\n", msg->data_len, sizeof(*msg), cpg_msg_len);
 		exit(2);
 	}
 
@@ -278,7 +278,7 @@ DeliverCallback(cpg_handle_t handle,
 	expected_chsum = compute_chsum(msg->data, msg->data_len);
 	if (chsum != expected_chsum) {
 		print_error_msg_start(nodeid, pid);
-		fprintf(stdout, "Incorrect message chsum %04x != %04x\n", chsum, expected_chsum);
+		fprintf(stderr, "Incorrect message chsum %04x != %04x\n", chsum, expected_chsum);
 		exit(2);
 	}
 }
@@ -409,7 +409,7 @@ process_cli_cmd(FILE *f, cpg_handle_t handle)
 	} else if (strcmp(token, "sendrand") == 0) {
 		s = read_token(s, token);
 		if (strcmp(token, "") == 0) {
-			printf("sendrand expects number\n");
+			fprintf(stderr, "sendrand expects number\n");
 
 			return (0);
 		}
@@ -417,14 +417,14 @@ process_cli_cmd(FILE *f, cpg_handle_t handle)
 
 		s = read_token(s, token);
 		if (strcmp(token, "") == 0) {
-			printf("sendrand expects number\n");
+			fprintf(stderr, "sendrand expects number\n");
 
 			return (0);
 		}
 		max_msg_len = atol(token);
 
 		if (max_msg_len < 3) {
-			printf("sendrand expects max_msg_len longer then 3\n");
+			fprintf(stderr, "sendrand expects max_msg_len longer then 3\n");
 
 			return (0);
 		}
@@ -442,7 +442,7 @@ process_cli_cmd(FILE *f, cpg_handle_t handle)
 		wait_for_msg = 1;
 	} else if (strcmp(token, "") == 0) {
 	} else {
-		printf("Unknown command %s\n", token);
+		fprintf(stderr, "Unknown command %s\n", token);
 	}
 
 	return (0);
@@ -478,13 +478,13 @@ main(int argc, char *argv[]) {
 
 	result = cpg_model_initialize (&handle, CPG_MODEL_V1, (cpg_model_data_t *)&model_data, NULL);
 	if (result != CS_OK) {
-		printf ("Could not initialize Cluster Process Group API instance error %d\n", result);
+		fprintf(stderr, "Could not initialize Cluster Process Group API instance error %d\n", result);
 		exit (1);
 	}
 
 	result = cpg_join(handle, &group_name);
 	if (result != CS_OK) {
-		printf ("Could not join process group, error %d\n", result);
+		fprintf(stderr, "Could not join process group, error %d\n", result);
 		exit (1);
 	}
 
