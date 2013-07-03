@@ -10,6 +10,20 @@
  * Basic_iso_date_time:Sending:STR:length:chsum:text_msg
  * Basic_iso_date_time:Arrived:(node_id pid):RAND:seq_no:length:chsum
  * Basic_iso_date_time:Arrived:(node_id pid):STR:length:chsum:text_msg
+ *
+ * Commands:
+ * exit						Exit cpg-cli-client
+ * sendstr str					Send string str to group
+ * sendrand seq_no max_msg_len			Send random data to group with sequence number seq_no and maximum
+ *						length of max_msg_len
+ * sendrandburst count seq_no max_msg_len	Send count random data messages with sequence number starting
+ *						from seq_no (seq_no is increased for every message) and maximum
+ *						length max_msg_len (cli is blocked until all messages are sent)
+ * sync	[seq_no]				Send random data message with maximum length 16 and sequence
+ *						number seq_no (default 0xFFEEDDCC = 4293844428)
+ *
+ * Every sent message contains checksum which is checked after receive of message (cpg-cli-client will exit if
+ * checksum doesn't match)
  */
 
 #include <inttypes.h>
