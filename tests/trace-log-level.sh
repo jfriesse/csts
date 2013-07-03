@@ -21,7 +21,7 @@ generate_corosync_conf_subsec_cb() {
 }
 
 send_cpg_msg() {
-    (echo "Test MSG"; sleep 1; echo "EXIT") | run_app "$nodes_ip" 'testcpg' > /dev/null
+    echo -e "sync\nexit\n" | run_app "$nodes_ip" 'cpg-cli-client'
 }
 
 
@@ -69,7 +69,7 @@ assert_msg_debug_subsys_trace() {
     stop_corosync "$nodes_ip"
 }
 
-compile_app "$nodes_ip" "testcpg" "-lcpg"
+compile_app "$nodes_ip" "cpg-cli-client" "-lcpg"
 
 for ((i=0; i<2; i++));do
     if [ "$i" == 0 ];then
