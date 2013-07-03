@@ -42,6 +42,9 @@
 
 static int wait_for_msg = 0;
 static uint64_t wait_for_msg_seqno = 0;
+static int send_rand_msgs_burst_count = 0;
+static uint64_t send_rand_msg_seq_no = 0;
+static uint32_t send_rand_msg_max_msg_len = 0;
 
 struct my_msg {
 	char msg_type;
@@ -442,6 +445,36 @@ process_cli_cmd(FILE *f, cpg_handle_t handle)
 		}
 
 		send_random_msg(handle, seq_no, max_msg_len);
+	} else if (strcmp(token, "sendrandburst") == 0) {
+		s = read_token(s, token);
+		if (strcmp(token, "") == 0) {
+			fprintf(stderr, "sendrand expects number\n");
+
+			return (0);
+		}
+		send_rand_msgs_burst_count = atol(token);
+
+		s = read_token(s, token);
+		if (strcmp(token, "") == 0) {
+			fprintf(stderr, "sendrand expects number\n");
+
+			return (0);
+		}
+		send_rand_msg_seq_no = atoll(token);
+
+		s = read_token(s, token);
+		if (strcmp(token, "") == 0) {
+			fprintf(stderr, "sendrand expects number\n");
+
+			return (0);
+		}
+		send_rand_msg_max_msg_len = atol(token);
+
+		if (send_rand_msg_max_msg_len < 3) {
+			fprintf(stderr, "sendrand expects max_msg_len longer then 3\n");
+
+			return (0);
+		}
 	} else if (strcmp(token, "sync") == 0) {
 		wait_for_msg_seqno = 0xFFEEDDCC;
 
@@ -525,7 +558,7 @@ main(int argc, char *argv[]) {
 		pfd[1].events = POLLIN;
 		pfd[1].revents = 0;
 
-		result = poll(pfd, ((wait_for_msg) ? 1 : 2), INFTIM);
+		result = poll(pfd, ((wait_for_msg || send_rand_msgs_burst_count > 0) ? 1 : 2), INFTIM);
 		if (result == -1) {
 			err(1, "poll\n");
 		}
@@ -548,6 +581,12 @@ main(int argc, char *argv[]) {
 			if (process_cli_cmd(stdin, handle) == -1) {
 				exit(0);
 			}
+		}
+
+		if (send_rand_msgs_burst_count > 0) {
+			send_rand_msgs_burst_count--;
+			send_random_msg(handle, send_rand_msg_seq_no, send_rand_msg_max_msg_len);
+			send_rand_msg_seq_no++;
 		}
 	} while (result);
 
