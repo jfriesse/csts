@@ -35,8 +35,8 @@ compile_app "$node_b" "cpg-cli-client" "-lcpg"
 run "$node_a" "iptables -A INPUT ! -i lo -p udp -m limit --limit 10000/s --limit-burst 1 -j ACCEPT"
 run "$node_a" "iptables -A INPUT ! -i lo -p udp ! --sport domain -j DROP"
 
-echo "Sending 2000 messages"
-echo -e "sendrandburst 2000 1 16\nsync\nexit" | run_app "$node_b" 'cpg-cli-client' > /dev/null
+echo "Sending 1000 messages"
+echo -e "sendrandburst 1000 1 16\nsync\nexit" | run_app "$node_b" 'cpg-cli-client' > /dev/null
 
 [ "`run $node_a 'pidof corosync'`" == "`run $node_a 'cat /var/run/corosync.pid'`" ] && \
     [ "`run $node_b 'pidof corosync'`" == "`run $node_b 'cat /var/run/corosync.pid'`" ]
