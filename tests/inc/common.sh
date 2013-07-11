@@ -120,8 +120,7 @@ driver_run_app() {
     shift 1
     local params="$*"
 
-    cd "$driver_test_apps_dir"
-    "./$app" $params
+    "$driver_test_apps_dir/$app" $params
 }
 
 generate_corosync_conf_cb() {
