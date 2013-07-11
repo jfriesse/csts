@@ -59,6 +59,7 @@ prepare_node_dirs() {
     done
 
     mkdir -p "$test_var_dir"
+    mkdir -p "$driver_test_apps_dir"
 }
 
 run() {
@@ -85,6 +86,14 @@ compile_app() {
     run "$node" "cc $test_apps_dir/$app.c $libs -o $test_apps_dir/$app"
 }
 
+driver_compile_app() {
+    local app="$1"
+    local libs="$2"
+
+    cp "../apps/$app.c" "$driver_test_apps_dir"
+    cc $driver_test_apps_dir/$app.c $libs -o $driver_test_apps_dir/$app
+}
+
 compile_confdb_app() {
     local node="$1"
     local app="$2"
@@ -104,6 +113,15 @@ run_app() {
     local params="$*"
 
     run "$node" "cd $test_apps_dir; ./$app $params"
+}
+
+driver_run_app() {
+    local app="$1"
+    shift 1
+    local params="$*"
+
+    cd "$driver_test_apps_dir"
+    "./$app" $params
 }
 
 generate_corosync_conf_cb() {
@@ -271,6 +289,10 @@ exit_trap() {
 	if [ "$confchg_used" == "true" ];then
             confchg_stop "$i"
         fi
+
+	if [ "$cpg_cli_client_used" == "true" ];then
+            cpg_cli_client_stop "$i"
+        fi
     done
 
     exit_trap_end_cb
@@ -352,6 +374,7 @@ if [ "$test_corover_undefined_enabled" == "" ];then
 fi
 
 test_apps_dir="~/csts-apps"
+driver_test_apps_dir="$HOME/csts-apps"
 test_var_dir="/var/csts"
 corosync_running=0
 corosync_version="undefined"
