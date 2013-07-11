@@ -27,7 +27,7 @@ for ((i=0; i<$no_nodes; i++));do
 
     cpg_cli_client_send_msg "${nodes_ip_array[$i]}" "PAUSE PONG $i"
     unpause_corosync "${nodes_ip_array[$i]}"
-    cpg_cli_client_wait_for_msg "$nodes_ip" "PAUSE PONG 2$i"
+    cpg_cli_client_wait_for_msg "$nodes_ip" "PAUSE PONG $i"
 done
 
 exit 0
