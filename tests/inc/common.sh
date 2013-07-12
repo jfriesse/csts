@@ -273,7 +273,10 @@ exit_trap_end_cb() {
 }
 
 exit_trap() {
-    [ "$alarm_pid" != "" ] && kill -INT $alarm_pid
+    if [ "$alarm_pid" != "" ];then
+	kill -INT $alarm_pid || true
+	pkill -P $alarm_pid || true
+    fi
 
     exit_trap_start_cb
 
@@ -296,7 +299,7 @@ exit_trap() {
 
     exit_trap_end_cb
 
-    pkill -P $test_pid
+    pkill -P $test_pid || true
 }
 
 cat_corosync_log() {
