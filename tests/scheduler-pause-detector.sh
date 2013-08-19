@@ -15,7 +15,7 @@ generate_corosync_conf_cb() {
 configure_corosync "$nodes_ip"
 start_corosync "$nodes_ip"
 
-for i in 1 3 6;do
+for i in 1 3 5;do
     pause_corosync "$nodes_ip"
     sleep $i
     unpause_corosync "$nodes_ip"
