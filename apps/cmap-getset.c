@@ -74,6 +74,10 @@ keys_create(cmap_handle_t handle)
 	assert(cmap_set(handle, "", "one", strlen("one"), CMAP_VALUETYPE_BINARY) == CS_ERR_NAME_TOO_LONG);
 	assert(cmap_set(handle, "testobj.fail", NULL, 0, CMAP_VALUETYPE_BINARY) == CS_ERR_INVALID_PARAM);
 	assert(cmap_set(handle, "testobj.fail", NULL, 2, CMAP_VALUETYPE_BINARY) == CS_ERR_INVALID_PARAM);
+	assert(cmap_set(handle, "testobj.testkey_str_len_1", str, strlen(str), CMAP_VALUETYPE_STRING) == CS_OK);
+	assert(cmap_set(handle, "testobj.testkey_str_len_2", str, strlen(str) + 1, CMAP_VALUETYPE_STRING) == CS_OK);
+	/* Store only part of string */
+	assert(cmap_set(handle, "testobj.testkey_str_len_3", str, strlen(str) - 1, CMAP_VALUETYPE_STRING) == CS_OK);
 }
 
 static void
@@ -198,8 +202,27 @@ check_keys_value(cmap_handle_t handle)
 
 	assert(cmap_get_string(handle, "testobj.str_2", &key_value2) == CS_OK);
 	assert(strlen(key_value2) == strlen(str));
-	assert(memcmp(key_value2, str, strlen(str)) == 0);	
+	assert(memcmp(key_value2, str, strlen(str)) == 0);
 	free(key_value2);
+
+	len = strlen(str) + 1;
+	assert(cmap_get(handle, "testobj.testkey_str_len_1", key_value, &len, &type) == CS_OK);
+	assert(len == strlen(str) + 1);
+	assert(type == CMAP_VALUETYPE_STRING);
+	assert(memcmp(key_value, str, strlen(str) + 1) == 0);
+
+	len = strlen(str) + 1;
+	assert(cmap_get(handle, "testobj.testkey_str_len_2", key_value, &len, &type) == CS_OK);
+	assert(len == strlen(str) + 1);
+	assert(type == CMAP_VALUETYPE_STRING);
+	assert(memcmp(key_value, str, strlen(str) + 1) == 0);
+
+	/* Check that only part of string is really stored */
+	len = strlen(str) + 1;
+	assert(cmap_get(handle, "testobj.testkey_str_len_3", key_value, &len, &type) == CS_OK);
+	assert(len == strlen(str));
+	assert(type == CMAP_VALUETYPE_STRING);
+	assert(memcmp(key_value, str, strlen(str) - 1) == 0);
 
 	assert(cmap_get_int8(handle, "testobj.testk", &i8) == CS_ERR_NOT_EXIST);
 
