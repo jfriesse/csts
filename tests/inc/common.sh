@@ -250,6 +250,14 @@ corosync_mem_used() {
     run "$node" 'ps -o rss -p `cat /var/run/corosync.pid` | sed -n 2p'
 }
 
+# Return %cpu field of ps output. This is cumulative cpu ussage during
+# process lifetime
+corosync_cpu_used() {
+    local node="$1"
+
+    run "$node" 'ps -o %cpu -p `cat /var/run/corosync.pid` | sed -n 2p'
+}
+
 # pause_corosync node
 pause_corosync() {
     local node="$1"
