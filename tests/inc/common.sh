@@ -303,6 +303,8 @@ exit_trap() {
 	if [ "$cpg_cli_client_used" == "true" ];then
             cpg_cli_client_stop "$i"
         fi
+
+        run "$i" "[ -d '/dev/shm' ] && ls -1 /dev/shm || true"
     done
 
     exit_trap_end_cb
