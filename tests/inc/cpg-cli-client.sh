@@ -116,3 +116,52 @@ cpg_cli_client_stop() {
 
     return 0
 }
+
+# cpg_cli_client_last_confchg node
+cpg_cli_client_last_confchg() {
+    local node="$1"
+
+    cpg_cli_client_cat_log "$node" | tac | grep "^[0-9T]*:ConfchgCallback:" | head -1
+}
+
+# cpg_cli_client_wait_for_last_confchg_no_members nodes members
+cpg_cli_client_wait_for_last_confchg_no_members() {
+    local nodes="$1"
+    local members="$2"
+    local no_retries=0
+    local node
+
+    for node in $nodes;do
+        while ! cpg_cli_client_last_confchg "$node" | \
+	  grep "^[0-9T]*:ConfchgCallback:[0-9a-zA-Z]*:[0-9]*,[0-9]*,$members:" && [ $no_retries -lt 40 ];do
+            sleep 1
+            no_retries=$(($no_retries + 1))
+        done
+
+        [ "$no_retries" -lt 40 ] && true || return 1
+    done
+
+    return 0
+}
+
+# cpg_cli_client_wait_for_last_confchg_in_sync master_node other_nodes
+cpg_cli_client_wait_for_last_confchg_in_sync() {
+    local master_node="$1"
+    local other_nodes="$2"
+
+    local no_retries=0
+    local node
+
+    for node in $nodes;do
+        while ! cpg_cli_client_last_confchg "$node" | \
+	  grep "^[0-9T]*:ConfchgCallback:[0-9a-zA-Z]*:[0-9]*,[0-9]*,$members:" && [ $no_retries -lt 40 ];do
+            sleep 1
+            no_retries=$(($no_retries + 1))
+        done
+
+        [ "$no_retries" -lt 40 ] && true || return 1
+    done
+
+    return 0
+
+}

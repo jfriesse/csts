@@ -374,6 +374,37 @@ randomize_word_order() {
     return 0
 }
 
+# permute_word_order "words" "out"
+# When called as permute_words "1 2 3", result is
+# 1 2 3
+# 1 3 2
+# 2 1 3
+# 2 3 1
+# 3 1 2
+# 3 2 1
+# Best to be used together with arrays and tr
+permute_word_order() {
+    local out="$2"
+    local i
+    local items
+    local param1
+    local param2
+    local param3
+    local param4
+
+    read -ra items <<< "$1"
+
+    [[ "$items" == "" ]] && echo $out && return
+    for ((i=0; i<${#items[@]}; i++)); do
+	param1=( ${items[@]:0:i} ${items[@]:i+1} )
+	param2=( $out ${items[@]:i:1})
+	param3=${param1[@]}
+	param4=${param2[@]}
+
+	permute_word_order "$param3" "$param4"
+    done
+}
+
 test_required_nodes=${test_required_nodes:-1}
 test_max_nodes=${test_max_nodes:-1}
 test_max_runtime=${test_max_runtime:-300}

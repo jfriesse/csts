@@ -5,7 +5,7 @@
 /*
  * Output is:
  * Basic_iso_date_time:ConfchgCallback:CPGCONFCHGGROUP:no_joined_nodes,no_left_nodes,no_members:(join_node_1 join_pid1)[,(join_node_2 join_pid2)...]:(leave_node1 leave_pid1)[,(leave_node2 leave_pid2)...]:(member_node1 member_pid1)[,(member_node2 member_pid2)
- * Basic_iso_date_time:TotemConfchgCallback:ring_id_node.ring_id_seq:(member_node1 member_pid1)[,(member_node2 member_pid2)
+ * Basic_iso_date_time:TotemConfchgCallback:ring_id_node.ring_id_seq:member_node1[,member_node2]
  * Basic_iso_data_time:Sending:RAND:seq_no:length:chsum
  * Basic_iso_date_time:Sending:STR:length:chsum:text_msg
  * Basic_iso_date_time:Arrived:(node_id pid):RAND:seq_no:length:chsum
