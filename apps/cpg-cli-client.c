@@ -10,6 +10,7 @@
  * Basic_iso_date_time:Sending:STR:length:chsum:text_msg
  * Basic_iso_date_time:Arrived:(node_id pid):RAND:seq_no:length:chsum
  * Basic_iso_date_time:Arrived:(node_id pid):STR:length:chsum:text_msg
+ * Basic_iso_date_time:ListMem:nodeid pid,[nodeid pid]
  *
  * Commands:
  * exit						Exit cpg-cli-client
@@ -21,6 +22,8 @@
  *						length max_msg_len (cli is blocked until all messages are sent)
  * sync	[seq_no]				Send random data message with maximum length 16 and sequence
  *						number seq_no (default 0xFFEEDDCC = 4293844428)
+ * listmem					List members of group. Result is returned in ListMem message
+ *						and sorted by nodeid and then pid
  *
  * Every sent message contains checksum which is checked after receive of message (cpg-cli-client will exit if
  * checksum doesn't match)
@@ -49,6 +52,8 @@
 #define MSG_TYPE_RANDOM	2
 
 #define MAX_MSG_LEN	50000
+
+#define MAX_CPG_MEMBERS		512
 
 #ifndef INFTIM
 #define INFTIM		-1
@@ -258,6 +263,79 @@ TotemConfchgCallback(cpg_handle_t handle,
 	printf ("\n");
 }
 
+static int
+print_list_membership_compar(const void *v1, const void *v2)
+{
+	struct cpg_iteration_description_t *desc1 = (struct cpg_iteration_description_t *)v1;
+	struct cpg_iteration_description_t *desc2 = (struct cpg_iteration_description_t *)v2;
+	int res;
+	int min;
+
+	min = desc1->group.length;
+	if (desc2->group.length < min) {
+		min = desc2->group.length;
+	}
+
+	res = strncmp(desc1->group.value, desc2->group.value, min);
+	if (res == 0) {
+		if (desc1->group.length == desc2->group.length) {
+			if (desc1->nodeid == desc2->nodeid) {
+				res = ((desc1->pid > desc2->pid) - (desc1->pid < desc2->pid));
+			} else {
+				res = ((desc1->nodeid > desc2->nodeid) - (desc1->nodeid < desc2->nodeid));
+			}
+		} else {
+			res = ((desc1->group.length > desc2->group.length) - (desc1->group.length < desc2->group.length));
+		}
+	}
+
+	return (res);
+}
+
+static void
+print_list_membership(cpg_handle_t cpg_handle, const struct cpg_name *cpg_group)
+{
+	cs_error_t res;
+	cpg_iteration_handle_t iter;
+	struct cpg_iteration_description_t description;
+	static struct cpg_iteration_description_t description_array[MAX_CPG_MEMBERS];
+	int cpg_members;
+	int i;
+
+	print_basic_iso_datetime(stdout);
+	printf(":ListMem:");
+
+	res = cpg_iteration_initialize(cpg_handle, CPG_ITERATION_ONE_GROUP, cpg_group, &iter);
+	if (res != CS_OK) {
+		errx(1, "cpg_iteration_initialize result %u != CS_OK", res);
+	}
+
+	cpg_members = 0;
+	while ((res = cpg_iteration_next(iter, &description)) == CS_OK) {
+		memcpy(&description_array[cpg_members], &description, sizeof(description));
+		cpg_members++;
+		if (cpg_members > MAX_CPG_MEMBERS) {
+			errx(1, "cpg_iteration_next too much cpg members (more then %u)", MAX_CPG_MEMBERS);
+		}
+	}
+	qsort(description_array, cpg_members, sizeof(description), print_list_membership_compar);
+
+	for (i = 0; i < cpg_members; i++) {
+		if (i != 0) {
+			printf(",");
+		}
+
+		printf("%x %x", description_array[i].nodeid, description_array[i].pid);
+	}
+
+	if (res != CS_ERR_NO_SECTIONS) {
+		errx(1, "cpg_iteration_next %u != CS_ERR_NO_SECTIONS", res);
+	}
+
+	cpg_iteration_finalize(iter);
+	printf("\n");
+}
+
 static void
 print_error_msg_start(uint32_t nodeid, uint32_t pid)
 {
@@ -417,7 +495,7 @@ rtrim(char *s)
 }
 
 static int
-process_cli_cmd(FILE *f, cpg_handle_t handle)
+process_cli_cmd(FILE *f, cpg_handle_t handle, const struct cpg_name *cpg_group)
 {
 	char input_buf[512];
 	char token[512];
@@ -499,6 +577,8 @@ process_cli_cmd(FILE *f, cpg_handle_t handle)
 
 		send_random_msg(handle, wait_for_msg_seqno, 16);
 		wait_for_msg = 1;
+	} else if (strcmp(token, "listmem") == 0) {
+		print_list_membership(handle, cpg_group);
 	} else if (strcmp(token, "") == 0) {
 	} else {
 		fprintf(stderr, "Unknown command %s\n", token);
@@ -592,7 +672,7 @@ main(int argc, char *argv[]) {
 		}
 
 		if (pfd[1].revents & (POLLIN|POLLHUP)) {
-			if (process_cli_cmd(stdin, handle) == -1) {
+			if (process_cli_cmd(stdin, handle, &group_name) == -1) {
 				exit(0);
 			}
 		}
