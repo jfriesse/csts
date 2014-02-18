@@ -11,6 +11,8 @@ test_max_runtime=600
 . inc/common.sh
 . inc/cpg-cli-client.sh
 
+cpg_cli_client_prepare "$nodes_ip"
+
 permuted_nodes=`permute_word_order "$nodes_ip" | tr ' \n' ': '`
 
 for tc in $permuted_nodes;do
