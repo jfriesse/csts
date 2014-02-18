@@ -59,7 +59,7 @@ cpg_cli_client_wait_for_msg() {
 
     for node in $nodes;do
         while ! cpg_cli_client_cat_log "$node" | \
-	  grep "^[0-9T]*:Arrived:([0-9a-z]* [0-9a-z]*):STR:[0-9]*:[0-9a-z]*:$msg\$" && [ $no_retries -lt 40 ];do
+	  grep "^[0-9T]*:Arrived:([0-9a-z]* [0-9a-z]*):STR:[0-9]*:[0-9a-z]*:$msg\$" &>/dev/null && [ $no_retries -lt 40 ];do
             sleep 1
             no_retries=$(($no_retries + 1))
         done
@@ -75,7 +75,7 @@ cpg_cli_client_wait_for_start() {
     local node="$1"
     local no_retries=0
 
-    while ! cpg_cli_client_cat_log "$node" | grep "^[0-9T]*:ConfchgCallback:" && [ $no_retries -lt 40 ];do
+    while ! cpg_cli_client_cat_log "$node" | grep "^[0-9T]*:ConfchgCallback:" &>/dev/null && [ $no_retries -lt 40 ];do
         sleep 1
         no_retries=$(($no_retries + 1))
     done
@@ -133,13 +133,35 @@ cpg_cli_client_wait_for_last_confchg_no_members() {
 
     for node in $nodes;do
         while ! cpg_cli_client_last_confchg "$node" | \
-	  grep "^[0-9T]*:ConfchgCallback:[0-9a-zA-Z]*:[0-9]*,[0-9]*,$members:" && [ $no_retries -lt 40 ];do
+	  grep "^[0-9T]*:ConfchgCallback:[0-9a-zA-Z]*:[0-9]*,[0-9]*,$members:" &>/dev/null && [ $no_retries -lt 40 ];do
             sleep 1
             no_retries=$(($no_retries + 1))
         done
 
         [ "$no_retries" -lt 40 ] && true || return 1
     done
+
+    return 0
+}
+
+# cpg_cli_client_listmem node
+cpg_cli_client_listmem() {
+    local node="$1"
+    local usernum=$RANDOM
+    local no_retries=0
+
+    echo "listmem $usernum" | cpg_cli_client_send_run "$node"
+
+    while ! cpg_cli_client_cat_log "$node" | tac | grep "^[0-9T]*:ListMem:$usernum:" &>/dev/null \
+        && [ $no_retries -lt 40 ];do
+            sleep 1
+            no_retries=$(($no_retries + 1))
+    done
+
+    [ "$no_retries" -lt 40 ] && true || return 1
+
+    cpg_cli_client_cat_log "$node" | tac | grep "^[0-9T]*:ListMem:$usernum:" | head -1 | \
+	sed 's/^[0-9T]*:ListMem:'$usernum'://'
 
     return 0
 }
@@ -151,10 +173,12 @@ cpg_cli_client_wait_for_last_confchg_in_sync() {
 
     local no_retries=0
     local node
+    local membership
 
-    for node in $nodes;do
-        while ! cpg_cli_client_last_confchg "$node" | \
-	  grep "^[0-9T]*:ConfchgCallback:[0-9a-zA-Z]*:[0-9]*,[0-9]*,$members:" && [ $no_retries -lt 40 ];do
+    membership=`cpg_cli_client_listmem "$master_node"`
+
+    for node in $other_nodes;do
+	while [ "`cpg_cli_client_listmem $node`" != "$membership" ] && [ $no_retries -lt 40 ];do
             sleep 1
             no_retries=$(($no_retries + 1))
         done
@@ -163,5 +187,4 @@ cpg_cli_client_wait_for_last_confchg_in_sync() {
     done
 
     return 0
-
 }

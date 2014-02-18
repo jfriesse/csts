@@ -37,6 +37,7 @@ for tc in $permuted_nodes;do
     cpg_cli_client_wait_for_last_confchg_no_members "${nodes_array[1]} ${nodes_array[2]}" 3
     sleep 2
     cpg_cli_client_wait_for_last_confchg_no_members "${nodes_array[0]}" 3
+    cpg_cli_client_wait_for_last_confchg_in_sync "${nodes_array[2]}" "${nodes_array[0]} ${nodes_array[1]}"
 
     cpg_cli_client_stop "$nodes_ip"
     for node in $nodes_ip;do
