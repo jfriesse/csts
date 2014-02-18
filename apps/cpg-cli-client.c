@@ -10,7 +10,7 @@
  * Basic_iso_date_time:Sending:STR:length:chsum:text_msg
  * Basic_iso_date_time:Arrived:(node_id pid):RAND:seq_no:length:chsum
  * Basic_iso_date_time:Arrived:(node_id pid):STR:length:chsum:text_msg
- * Basic_iso_date_time:ListMem:nodeid pid,[nodeid pid]
+ * Basic_iso_date_time:ListMem:user_num:nodeid pid,[nodeid pid]
  *
  * Commands:
  * exit						Exit cpg-cli-client
@@ -22,8 +22,9 @@
  *						length max_msg_len (cli is blocked until all messages are sent)
  * sync	[seq_no]				Send random data message with maximum length 16 and sequence
  *						number seq_no (default 0xFFEEDDCC = 4293844428)
- * listmem					List members of group. Result is returned in ListMem message
- *						and sorted by nodeid and then pid
+ * listmem [user_num]				List members of group. Result is returned in ListMem message
+ *						and sorted by nodeid and then pid. user_num is number and
+ *						returned in ListMem message. Default user_num is 0.
  *
  * Every sent message contains checksum which is checked after receive of message (cpg-cli-client will exit if
  * checksum doesn't match)
@@ -293,7 +294,7 @@ print_list_membership_compar(const void *v1, const void *v2)
 }
 
 static void
-print_list_membership(cpg_handle_t cpg_handle, const struct cpg_name *cpg_group)
+print_list_membership(long long int user_num, cpg_handle_t cpg_handle, const struct cpg_name *cpg_group)
 {
 	cs_error_t res;
 	cpg_iteration_handle_t iter;
@@ -303,7 +304,7 @@ print_list_membership(cpg_handle_t cpg_handle, const struct cpg_name *cpg_group)
 	int i;
 
 	print_basic_iso_datetime(stdout);
-	printf(":ListMem:");
+	printf(":ListMem:%llu:", user_num);
 
 	res = cpg_iteration_initialize(cpg_handle, CPG_ITERATION_ONE_GROUP, cpg_group, &iter);
 	if (res != CS_OK) {
@@ -502,6 +503,7 @@ process_cli_cmd(FILE *f, cpg_handle_t handle, const struct cpg_name *cpg_group)
 	char *s;
 	uint64_t seq_no;
 	uint32_t max_msg_len;
+	long long user_num;
 
 	if (fgets(input_buf, sizeof(input_buf), f) == NULL) {
 		return (-1);
@@ -578,7 +580,14 @@ process_cli_cmd(FILE *f, cpg_handle_t handle, const struct cpg_name *cpg_group)
 		send_random_msg(handle, wait_for_msg_seqno, 16);
 		wait_for_msg = 1;
 	} else if (strcmp(token, "listmem") == 0) {
-		print_list_membership(handle, cpg_group);
+		s = read_token(s, token);
+		if (strcmp(token, "") == 0) {
+			user_num = 0;
+		} else {
+			user_num = atoll(token);
+		}
+
+		print_list_membership(user_num, handle, cpg_group);
 	} else if (strcmp(token, "") == 0) {
 	} else {
 		fprintf(stderr, "Unknown command %s\n", token);
