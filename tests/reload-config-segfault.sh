@@ -3,7 +3,7 @@
 # Author: Jan Friesse <jfriesse@redhat.com>
 #
 
-test_description="Test that running corosync-cfgtool doesn't cause stop of logging and doesn't crash corosync"
+test_description="Test that reload of config file doesn't cause stop of logging and doesn't crash corosync"
 test_corover_flatiron_enabled=false
 test_corover_needle_enabled=true
 
