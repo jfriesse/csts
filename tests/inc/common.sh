@@ -150,6 +150,21 @@ configure_corosync() {
     generate_corosync_conf "$node" "$2"
 }
 
+# get_current_corosync_config node
+get_current_corosync_config() {
+    local node="$1"
+
+    run "$node" "cat /etc/corosync/corosync.conf"
+}
+
+# store_corosync_config node
+# Store corosync config (read from stdin) as a node corosync.conf
+store_corosync_config() {
+    local node="$1"
+
+    run "$node" "cat > /etc/corosync/corosync.conf"
+}
+
 start_corosync_insert_marker() {
     local node="$1"
 
@@ -343,6 +358,19 @@ cmap_get() {
     else
 	run "$node" "corosync-cmapctl $key | sed 's/^.* = //'"
     fi
+}
+
+cmap_del() {
+    local node="$1"
+    local key="$2"
+
+    if ! run "$node" "which corosync-cmapctl &>/dev/null";then
+	# Use corosync-objctl
+	run "$node" "corosync-objctl -d $key"
+    else
+	run "$node" "corosync-cmapctl -d $key"
+    fi
+
 }
 
 # Similar like wait, but returns error code if ANY of processes returned nonzero status code
