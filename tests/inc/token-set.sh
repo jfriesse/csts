@@ -5,7 +5,8 @@
 
 # It's expected to have #token and #consensus in config file.
 generate_corosync_conf_cb() {
-    sed 's/^[ \t]*debug: .*$/debug: on/' | sed '/version:/a\\t#token: 1000\n\t#consensus: 1200'
+    sed 's/^[ \t]*debug: .*$/debug: on/' | \
+        sed '/version:/a\\t#token: 1000\n\t#consensus: 1200\n\t#token_coefficient: 650'
 }
 
 receive_current_token_timeout() {
@@ -22,7 +23,8 @@ receive_current_consensus_timeout() {
 # Change token or consensus value ether by using cmap or config.
 # No reload is called.
 # value can be ether value (number), empty (no change) or del (means value is deleted)
-# item can be anything totem.$item, but tested only for totem.token and totem.consensus
+# item can be anything totem.$item, but tested only for totem.token, totem.consensus and
+# totem.token_coefficient
 change_tc_value() {
     local item="$1"
     local value="$2"
