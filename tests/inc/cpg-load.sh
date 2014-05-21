@@ -64,3 +64,21 @@ cpg_load_stop() {
 
     return 0
 }
+
+# cpg_load_one_shot node [max_msgs] [no_messages_in_burst]
+# Run cpg-load on one node on foreground, sending/receiving max_msgs and checking error code
+cpg_load_one_shot() {
+    local node="$1"
+    local max_msgs="$2"
+    local burst="$3"
+
+    if [ "$max_msgs" == "" ];then
+        max_msgs=5000
+    fi
+
+    if [ "$burst" == "" ];then
+        burst=100
+    fi
+
+    run_app "$node" "cpg-load -n $burst -m $max_msgs -q"
+}
