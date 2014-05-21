@@ -47,6 +47,7 @@ static uint64_t last_msg;
 static uint64_t last_expected;
 static int quiet = 0;
 static uint32_t local_nodeid;
+static signed long int max_msgs = -1;
 
 static void print_basic_iso_datetime(FILE *out)
 {
@@ -157,6 +158,10 @@ void send_msgs(cpg_handle_t handle, int no_msgs, int max_msg_len)
 		if (err == CS_OK) {
 			last_msg++;
 			refill_data = 1;
+
+			if (last_msg >= max_msgs) {
+				break;
+			}
 		}
 	}
 }
@@ -191,12 +196,21 @@ static void DeliverCallback (
 		} else {
 			print_error_msg_start(nodeid, pid, msg->seq_no);
 			fprintf(stdout, "Incorrect msg seq %"PRIu64" != %"PRIu64"\n", msg->seq_no, last_expected);
+
+			if (max_msgs != -1) {
+				exit (2);
+			}
 		}
 	}
 
 	if ((msg->data_len + sizeof(*msg)) != cpg_msg_len) {
 		print_error_msg_start(nodeid, pid, msg->seq_no);
 		fprintf(stdout, "Incorrect message length %"PRIu32"+%zu != %zu\n", msg->data_len, sizeof(*msg), cpg_msg_len);
+
+		if (max_msgs != -1) {
+			exit (2);
+		}
+
 		return ;
 	}
 
@@ -205,6 +219,11 @@ static void DeliverCallback (
 	if (chsum != expected_chsum) {
 		print_error_msg_start(nodeid, pid, msg->seq_no);
 		fprintf(stdout, "Incorrect message chsum %04x != %04x\n", chsum, expected_chsum);
+
+		if (max_msgs != -1) {
+			exit (2);
+		}
+
 		return ;
 	}
 
@@ -223,10 +242,16 @@ static void sigintr_handler (int signum) {
 
 static void usage(void)
 {
-	printf("Usage: [-q] [-n num]\n");
-	printf(" -q         Quiet mode (only err messages are displayed)\n");
-	printf(" -n num     Number of messages in one burst\n");
-	printf(" -l msg_len Maximum message length\n");
+	printf("Usage: [-q] [-m max_msgs] [-n num]\n");
+	printf(" -q           Quiet mode (only err messages are displayed)\n");
+	printf(" -m max_msgs  Maximum messages to send and receive\n");
+	printf(" -n num       Number of messages in one burst\n");
+	printf(" -l msg_len   Maximum message length\n");
+	printf("\n");
+	printf("Behaviour differs if -m is specified and if it's not.\n");
+	printf("Without -m, app runs forever and only startup errors are fatal.\n");
+	printf("With -m, app sends/receives only given number of messages. On success return error code is 0. "
+	    "On error (all errors are fatal) exit code is not 0.\n");
 
 	exit(1);
 }
@@ -260,10 +285,17 @@ int main (int argc, char *argv[]) {
 	last_msg = 0;
 	last_expected = 0;
 
-	while ((ch = getopt(argc, argv, "qhl:n:")) != -1) {
+	while ((ch = getopt(argc, argv, "qhl:m:n:")) != -1) {
 		switch (ch) {
 		case 'q':
 			quiet = 1;
+			break;
+		case 'm':
+			max_msgs = strtol(optarg, &ep, 10);
+			if (max_msgs <= 0 || *ep != '\0') {
+				warnx("illegal number, -m argument -- %s", optarg);
+				usage();
+			}
 			break;
 		case 'n':
 			num = strtol(optarg, &ep, 10);
@@ -332,6 +364,10 @@ int main (int argc, char *argv[]) {
 
 		if (result == -1) {
 			perror("poll\n");
+		}
+
+		if (last_expected >= max_msgs) {
+			return (0);
 		}
 
 		if (last_expected == last_msg) {
