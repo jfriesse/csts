@@ -39,6 +39,18 @@ nospace_init() {
     return 0
 }
 
+# nospace_fini node
+# Finalize nospace. Unmounts and deletes loop image
+nospace_fini() {
+    local node="$1"
+
+    if run "$node" mount | grep "$nospace_image_file";then
+        run "$node" umount "$nospace_image_file"
+
+        run "$node" rm -f "$nospace_image_file"
+    fi
+}
+
 # nospace_fill node
 nospace_fill() {
     local node="$1"
