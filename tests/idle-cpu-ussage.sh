@@ -21,6 +21,13 @@ start_corosync "$nodes_ip"
 sleep 3
 
 cpu_used=`corosync_cpu_used "$nodes_ip"`
-[ "${cpu_used%%.*}" -lt 3 ]
+if [ "${cpu_used%%.*}" -gt 3 ];then
+    # Give corosync a little more time to settle (if corosync is really eating
+    # whole CPU time, nothing will change)
+    sleep 15
+
+    cpu_used=`corosync_cpu_used "$nodes_ip"`
+    [ "${cpu_used%%.*}" -lt 3 ]
+fi
 
 exit 0
