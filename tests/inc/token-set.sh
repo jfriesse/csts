@@ -87,4 +87,3 @@ change_token_and_consensus() {
         run "$nodes_ip" "corosync-cfgtool -R"
     fi
 }
-

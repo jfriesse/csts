@@ -6,6 +6,7 @@
 test_description="Test that point to point address is correctly found"
 
 . inc/common.sh
+. inc/tap.sh
 
 bindnetaddr="192.168.211.1"
 
@@ -14,10 +15,11 @@ generate_corosync_conf_cb() {
 }
 
 exit_trap_end_cb() {
-    run "$nodes_ip" "tunctl -d $tap_name"
+    tap_delete_device "$tap_name"
 }
 
-tap_name=`run "$nodes_ip" "tunctl -b -p"`
+tap_name=`tap_create_device`
+[ "$tap_name" != "" ]
 
 run "$nodes_ip" "ifconfig $tap_name $bindnetaddr netmask 255.255.255.255 pointopoint 192.168.211.2"
 configure_corosync "$nodes_ip"
