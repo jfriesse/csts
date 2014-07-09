@@ -295,6 +295,12 @@ unpause_corosync() {
     signal_corosync "$node" "CONT"
 }
 
+abrt_corosync() {
+    local node="$1"
+
+    signal_corosync "$node" "ABRT"
+}
+
 exit_trap_start_cb() {
     return 0
 }
