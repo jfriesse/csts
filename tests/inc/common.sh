@@ -273,18 +273,26 @@ corosync_cpu_used() {
     run "$node" 'ps -o %cpu -p `cat /var/run/corosync.pid` | sed -n 2p'
 }
 
+# signal_corosync node signal
+signal_corosync() {
+    local node="$1"
+    local signal="$2"
+
+    run "$node" 'kill -'"$signal"' `cat /var/run/corosync.pid`'
+}
+
 # pause_corosync node
 pause_corosync() {
     local node="$1"
 
-    run "$node" 'kill -STOP `cat /var/run/corosync.pid`'
+    signal_corosync "$node" "STOP"
 }
 
 # unpause_corosync node
 unpause_corosync() {
     local node="$1"
 
-    run "$node" 'kill -CONT `cat /var/run/corosync.pid`'
+    signal_corosync "$node" "CONT"
 }
 
 exit_trap_start_cb() {
