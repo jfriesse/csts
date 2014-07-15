@@ -370,7 +370,7 @@ cmap_get() {
 	# Use corosync-objctl
 	run "$node" "corosync-objctl -a | grep '^$key=' | sed 's/^.*=//'"
     else
-	run "$node" "corosync-cmapctl $key | sed 's/^.* = //'"
+	run "$node" "corosync-cmapctl -g $key | sed 's/^.* = //'"
     fi
 }
 
