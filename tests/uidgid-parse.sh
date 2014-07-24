@@ -54,7 +54,7 @@ check_uidgid_exists() {
 
 run "$nodes_ip" "mkdir -p /etc/corosync/uidgid.d/"
 
-# Needle parser throws error if uidgid contains item other then uid|gid
+# Needle parser throws error if uidgid contains item other than uid|gid
 if [ "$corosync_version" == "needle" ];then
     configure_corosync "$nodes_ip" gen_conf_needle_error
     start_corosync "$nodes_ip" && exit 1 || true

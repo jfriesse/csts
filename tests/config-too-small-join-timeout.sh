@@ -14,6 +14,6 @@ generate_corosync_conf_cb() {
 
 configure_corosync "$nodes_ip"
 start_corosync "$nodes_ip" && exit 1
-cat_corosync_log "$nodes_ip" | grep -i 'may not be less then'
+cat_corosync_log "$nodes_ip" | grep -i 'may not be less th[ea]n'
 
 exit 0

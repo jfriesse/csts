@@ -15,6 +15,6 @@ configure_corosync "$nodes_ip"
 start_corosync "$nodes_ip" && exit 1 || res=$?
 [ "$res" -gt 127 ] && exit 1 || true
 
-cat_corosync_log "$nodes_ip" | grep "interface ring number .* is bigger then allowed maximum "
+cat_corosync_log "$nodes_ip" | grep "interface ring number .* is bigger th[ea]n allowed maximum "
 
 exit 0
