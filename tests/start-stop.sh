@@ -18,6 +18,8 @@ for node in $nodes_ip;do
          start_corosync "$node"
          sleep 0.0$(($RANDOM % 10))
          stop_corosync "$node"
+         # Get corosync some time to create valid membership
+         sleep 2
      done) &
     pids="$! $pids"
 done
