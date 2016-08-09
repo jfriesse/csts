@@ -44,7 +44,7 @@ gen_conf_needle_error() {
 # check_uidgid_exists uid|gid id
 check_uidgid_exists() {
     if [ "$corosync_version" == "needle" ];then
-        [ "`cmap_get \"$nodes_ip\" \"uidgid.$1.$2\"`" == "1" ]
+        [ "`cmap_get \"$nodes_ip\" \"uidgid.config.$1.$2\"`" == "1" ]
     fi
 
     if [ "$corosync_version" == "flatiron" ];then
