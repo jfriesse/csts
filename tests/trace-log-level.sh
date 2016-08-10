@@ -26,6 +26,8 @@ send_cpg_msg() {
 
 
 is_msg_in_log() {
+    # Give some time for logged entry to appear
+    sleep 2
     cat_corosync_log "$nodes_ip" | grep "$msg_to_find"
 }
 
