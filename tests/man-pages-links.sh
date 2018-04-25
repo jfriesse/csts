@@ -51,7 +51,7 @@ process_page() {
     mp_file=`run "$nodes_ip" man -w "$sect" "$mp"`
     [ "$mp_file" == "" ] && return $depth
 
-    links=`cat_mp "$mp_file" | grep '^.BR ' | sed 's/^.BR \(.*\) (\(.*\)).*$/\1.\2/'`
+    links=`cat_mp "$mp_file" | grep '^.BR .* (' | sed 's/^.BR \(.*\) (\(.*\)).*$/\1.\2/'`
     for l in $links;do
         process_page "${l%%.[0-9]}" "${l##*.}" "$(($depth + 1))" || return $?
     done
