@@ -3,6 +3,8 @@ Corosync Shell Test Suite
 
 Simpler version of full CTS for regression tests of corosync.
 
+Smoke directory contains basic smoke test used for single node test.
+
 License
 -------
 See COPYING file for license (ISC)
