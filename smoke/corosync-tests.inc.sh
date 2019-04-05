@@ -20,8 +20,10 @@ test_corosync_keygen() {
     [ "${wc_res%% *}" -gt 0 ]
 }
 
+# test_corosync_start crypto
+# crypto can be on or off
 test_corosync_start() {
-    generate_corosync_conf | tee "$COROSYNC_CONF"
+    generate_corosync_conf "$1" | tee "$COROSYNC_CONF"
 
     systemctl start corosync
 }
@@ -68,9 +70,17 @@ test_corosync_cmapctl() {
 ########
 # main #
 ########
+if [ -z "$PREFIX" ];then
+    echo "PREFIX not defined. Do not run *.inc.sh directly"
+    exit 1
+fi
+
 test_corosync_v
 test_corosync_keygen
-test_corosync_start
-test_corosync_quorumtool
-test_corosync_cmapctl
-test_corosync_stop
+
+for crypto in "off" "on";do
+    test_corosync_start "$crypto"
+    test_corosync_quorumtool
+    test_corosync_cmapctl
+    test_corosync_stop
+done

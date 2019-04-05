@@ -27,14 +27,30 @@ get_ip() {
     echo "$addr"
 }
 
+# generate_corosync_conf crypto
+# crypto can be on or off
 generate_corosync_conf() {
+    case "$1" in
+    "on")
+        cipher="aes256"
+        hash="sha256"
+        ;;
+    "off")
+        cipher="none"
+        hash="none"
+        ;;
+    *)
+        # Unknown crypto
+        exit 1
+    esac
+
 cat << _EOF_
     totem {
         version: 2
         cluster_name: smoketestcluster
         transport: knet
-        crypto_cipher: none
-        crypto_hash: none
+        crypto_cipher: $cipher
+        crypto_hash: $hash
     }
 
     logging {
