@@ -4,6 +4,8 @@
 # !!! Script overwrites corosync.conf and authkey !!!
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+# Home https://github.com/jfriesse/csts/tree/master/smoke
+
 set -xe
 set -o pipefail
 
@@ -76,3 +78,7 @@ _EOF_
 # Computed variables #
 ######################
 LOCAL_IP=$(get_ip)
+
+##################
+# C test sources #
+##################
