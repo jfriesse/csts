@@ -34,7 +34,8 @@ test_corosync_stop() {
 
 test_corosync_quorumtool() {
     quorumtool_res_file=`mktemp`
-    corosync-quorumtool -ips | tee "$quorumtool_res_file"
+    # This is already fixed in upstream db38e3958c4f88d5d06e8f7c83d6d90334d9fbd2
+    (corosync-quorumtool -ips || true) | tee "$quorumtool_res_file"
 
     # Ensure this is single node cluster
     grep -qi '^Nodes:.*1$' "$quorumtool_res_file"
