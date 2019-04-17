@@ -81,17 +81,21 @@ test_corosync_reload() {
 
     test_corosync_start "off"
 
+    # Get current token timeout
     corosync-cmapctl -g "runtime.config.totem.token" | tee "$cmapctl_res_file"
     cmapctl_res=$(cat "$cmapctl_res_file")
     # Format is runtime.config.totem.token (u32) = value
     token_pre_reload=${cmapctl_res##* }
     [ "$token_pre_reload" -eq "$TOKEN_TIMEOUT" ]
 
+    # Generate new corosync.conf with token_timeout*10
     new_token_timeout=$((TOKEN_TIMEOUT*10))
-
     generate_corosync_conf "off" "$new_token_timeout" | tee "$COROSYNC_CONF"
+
+    # Main call off the test
     corosync-cfgtool -R
 
+    # Check that new token timeout is in use
     corosync-cmapctl -g "runtime.config.totem.token" | tee "$cmapctl_res_file"
     cmapctl_res=$(cat "$cmapctl_res_file")
     # Format is runtime.config.totem.token (u32) = value
@@ -124,8 +128,6 @@ fi
 test_corosync_v
 test_corosync_keygen
 
-test_corosync_reload
-
 for crypto in "off" "on";do
     test_corosync_start "$crypto"
     test_corosync_quorumtool
@@ -133,3 +135,5 @@ for crypto in "off" "on";do
     test_corosync_api
     test_corosync_stop
 done
+
+test_corosync_reload
