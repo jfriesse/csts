@@ -117,6 +117,16 @@ test_corosync_api() {
     /tmp/corosync-api-test
 }
 
+test_corosync_api_mp() {
+    cflags=$(pkg-config --cflags libcpg)
+    libs=$(pkg-config --libs libcpg)
+
+    gcc -ggdb -Wall $cflags "/tmp/corosync-api-test-mp.c" \
+        $libs -o "/tmp/corosync-api-test-mp"
+
+    /tmp/corosync-api-test-mp
+}
+
 ########
 # main #
 ########
@@ -133,6 +143,7 @@ for crypto in "off" "on";do
     test_corosync_quorumtool
     test_corosync_cmapctl
     test_corosync_api
+    test_corosync_api_mp
     test_corosync_stop
 done
 

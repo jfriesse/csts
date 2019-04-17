@@ -1,2 +1,3 @@
 corosync-runtest.sh
 corosync-api-test
+corosync-api-test-mp
