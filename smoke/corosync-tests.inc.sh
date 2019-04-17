@@ -23,6 +23,9 @@ test_corosync_keygen() {
 # test_corosync_start crypto
 # crypto can be on or off
 test_corosync_start() {
+    # corosync service must be inactive
+    systemctl is-active corosync && exit 1 || true
+
     generate_corosync_conf "$1" | tee "$COROSYNC_CONF"
 
     systemctl start corosync
@@ -76,8 +79,6 @@ test_corosync_cmapctl() {
 test_corosync_reload() {
     cmapctl_res_file=`mktemp`
 
-    systemctl is-active corosync && exit 1 || true
-
     test_corosync_start "off"
 
     corosync-cmapctl -g "runtime.config.totem.token" | tee "$cmapctl_res_file"
@@ -103,13 +104,13 @@ test_corosync_reload() {
 }
 
 test_corosync_api() {
-	cflags=$(pkg-config --cflags libcpg)
-	libs=$(pkg-config --libs libcpg)
+    cflags=$(pkg-config --cflags libcpg)
+    libs=$(pkg-config --libs libcpg)
 
-	gcc -ggdb -Wall $cflags "/tmp/corosync-api-test.c" \
-	    $libs -o "/tmp/corosync-api-test"
+    gcc -ggdb -Wall $cflags "/tmp/corosync-api-test.c" \
+        $libs -o "/tmp/corosync-api-test"
 
-	/tmp/corosync-api-test
+    /tmp/corosync-api-test
 }
 
 ########
