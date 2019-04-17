@@ -16,6 +16,8 @@ COROSYNC_SYSCONFD="${PREFIX}etc/corosync"
 COROSYNC_CONF="${COROSYNC_SYSCONFD}/corosync.conf"
 COROSYNC_AUTHKEY="${COROSYNC_SYSCONFD}/authkey"
 
+TOKEN_TIMEOUT=1000
+
 ####################
 # Helper functions #
 ####################
@@ -29,8 +31,9 @@ get_ip() {
     echo "$addr"
 }
 
-# generate_corosync_conf crypto
+# generate_corosync_conf crypto [token]
 # crypto can be on or off
+# when token is defined it is used for token timeout
 generate_corosync_conf() {
     case "$1" in
     "on")
@@ -46,6 +49,11 @@ generate_corosync_conf() {
         exit 1
     esac
 
+    token=$TOKEN_TIMEOUT
+    if [ ! -z "$2" ];then
+        token="$2"
+    fi
+
 cat << _EOF_
     totem {
         version: 2
@@ -53,6 +61,7 @@ cat << _EOF_
         transport: knet
         crypto_cipher: $cipher
         crypto_hash: $hash
+        token: $token
     }
 
     logging {

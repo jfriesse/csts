@@ -26,10 +26,14 @@ test_corosync_start() {
     generate_corosync_conf "$1" | tee "$COROSYNC_CONF"
 
     systemctl start corosync
+
+    systemctl is-active corosync
 }
 
 test_corosync_stop() {
     systemctl stop corosync
+
+    systemctl is-active corosync && exit 1 || true
 }
 
 test_corosync_quorumtool() {
@@ -68,6 +72,36 @@ test_corosync_cmapctl() {
     rm -f "$cmapctl_res_file"
 }
 
+# test_corosync_reload - requires stopped corosync
+test_corosync_reload() {
+    cmapctl_res_file=`mktemp`
+
+    systemctl is-active corosync && exit 1 || true
+
+    test_corosync_start "off"
+
+    corosync-cmapctl -g "runtime.config.totem.token" | tee "$cmapctl_res_file"
+    cmapctl_res=$(cat "$cmapctl_res_file")
+    # Format is runtime.config.totem.token (u32) = value
+    token_pre_reload=${cmapctl_res##* }
+    [ "$token_pre_reload" -eq "$TOKEN_TIMEOUT" ]
+
+    new_token_timeout=$((TOKEN_TIMEOUT*10))
+
+    generate_corosync_conf "off" "$new_token_timeout" | tee "$COROSYNC_CONF"
+    corosync-cfgtool -R
+
+    corosync-cmapctl -g "runtime.config.totem.token" | tee "$cmapctl_res_file"
+    cmapctl_res=$(cat "$cmapctl_res_file")
+    # Format is runtime.config.totem.token (u32) = value
+    token_post_reload=${cmapctl_res##* }
+    [ "$token_post_reload" -eq "$new_token_timeout" ]
+
+    test_corosync_stop
+
+    rm -f "$cmapctl_res_file"
+}
+
 test_corosync_api() {
 	cflags=$(pkg-config --cflags libcpg)
 	libs=$(pkg-config --libs libcpg)
@@ -88,6 +122,8 @@ fi
 
 test_corosync_v
 test_corosync_keygen
+
+test_corosync_reload
 
 for crypto in "off" "on";do
     test_corosync_start "$crypto"
