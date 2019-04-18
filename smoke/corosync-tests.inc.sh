@@ -127,6 +127,16 @@ test_corosync_api_mp() {
     /tmp/corosync-api-test-mp
 }
 
+test_corosync_man_pages() {
+    # At least these man pages should be installed
+    expected_mp="corosync corosync.conf corosync-cfgtool corosync-cmapctl
+        corosync-keygen corosync-quorumtool"
+
+    for mp in $expected_mp;do
+        man -w "$mp"
+    done
+}
+
 ########
 # main #
 ########
@@ -137,6 +147,7 @@ fi
 
 test_corosync_v
 test_corosync_keygen
+test_corosync_man_pages
 
 for crypto in "off" "on";do
     test_corosync_start "$crypto"
