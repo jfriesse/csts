@@ -109,3 +109,5 @@ LOCAL_IP=$(get_ip)
 ##################
 # C test sources #
 ##################
+
+# Test sources are encoded as a base64 string and piped to base64 to store them in /tmp

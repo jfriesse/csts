@@ -92,7 +92,7 @@ test_corosync_reload() {
     new_token_timeout=$((TOKEN_TIMEOUT*10))
     generate_corosync_conf "off" "$new_token_timeout" | tee "$COROSYNC_CONF"
 
-    # Main call off the test
+    # Main call of the test
     corosync-cfgtool -R
 
     # Check that new token timeout is in use
