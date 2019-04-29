@@ -1,3 +1,5 @@
+C_APPS = corosync-api-test corosync-api-test-mp
+
 all: corosync-runtest.sh
 
 corosync-api-test: corosync-api-test.c
@@ -6,16 +8,15 @@ corosync-api-test: corosync-api-test.c
 corosync-api-test-mp: corosync-api-test-mp.c
 	$(CC) -ggdb -Wall `pkg-config --cflags libcpg` $< `pkg-config --libs libcpg` -o $@
 
-corosync-runtest.sh: common.inc.sh corosync-tests.inc.sh corosync-api-test corosync-api-test-mp
+corosync-runtest.sh: common.inc.sh corosync-tests.inc.sh $(C_APPS)
 	cat common.inc.sh > $@
 
-	echo "# corosync-api-test.c" >> $@
-	echo "echo \"`base64 corosync-api-test.c`\" | base64 -d | tee \"/tmp/corosync-api-test.c\"" >> $@
-	echo "# - corosync-api-test.c" >> $@
-
-	echo "# corosync-api-test-mp.c" >> $@
-	echo "echo \"`base64 corosync-api-test-mp.c`\" | base64 -d | tee \"/tmp/corosync-api-test-mp.c\"" >> $@
-	echo "# - corosync-api-test-mp.c" >> $@
+	# Store C files as a base64 encoded string piped via base64 -d for storing decoded file into /tmp
+	for f in $(C_APPS);do \
+	    echo "# $$f.c" >> $@; \
+	    echo "echo \"`base64 $$f.c`\" | base64 -d | tee \"/tmp/$$f.c\"" >> $@; \
+	    echo "# - $$f.c" >> $@; \
+	done
 
 	cat corosync-tests.inc.sh >> $@
 
