@@ -23,20 +23,13 @@ test_corosync_keygen() {
 # test_corosync_start crypto
 # crypto can be on or off
 test_corosync_start() {
-    # corosync service must be inactive
-    systemctl is-active corosync && exit 1 || true
-
     generate_corosync_conf "$1" | tee "$COROSYNC_CONF"
 
-    systemctl start corosync
-
-    systemctl is-active corosync
+    service_start "corosync"
 }
 
 test_corosync_stop() {
-    systemctl stop corosync
-
-    systemctl is-active corosync && exit 1 || true
+    service_stop "corosync"
 }
 
 test_corosync_quorumtool() {

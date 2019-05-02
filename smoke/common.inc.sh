@@ -101,6 +101,23 @@ cat << _EOF_
 _EOF_
 }
 
+# service_start service
+service_start() {
+    # service service must be inactive
+    systemctl is-active "$1" && exit 1 || true
+
+    systemctl start "$1"
+
+    systemctl is-active "$1"
+}
+
+# service_stop service
+service_stop() {
+    systemctl stop "$1"
+
+    systemctl is-active "$1" && exit 1 || true
+}
+
 ######################
 # Computed variables #
 ######################
