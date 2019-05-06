@@ -56,6 +56,35 @@ test_corosync_stop() {
     service_stop "corosync"
 }
 
+# test_corosync_quorumtool quorate
+# quorate can be yes or no
+test_corosync_quorumtool() {
+    quorumtool_res_file=`mktemp`
+    # This is already fixed in upstream db38e3958c4f88d5d06e8f7c83d6d90334d9fbd2
+    (corosync-quorumtool -ips || true) | tee "$quorumtool_res_file"
+
+    # Ensure this is single node cluster
+    grep -qi '^Nodes:.*1$' "$quorumtool_res_file"
+    # Current node id is 1
+    grep -qi '^Node ID:.*1$' "$quorumtool_res_file"
+    # Is quorate (libquorum)
+    if [ "$1" == "yes" ];then
+        grep -qi '^Quorate:.*Yes$' "$quorumtool_res_file"
+    else
+        grep -qi '^Quorate:.*No$' "$quorumtool_res_file"
+    fi
+
+    # Quorum is 2
+    grep -qi '^Quorum:.*2' "$quorumtool_res_file"
+
+    # Is quorate (libvotequorum)
+    if [ "$1" == "yes" ];then
+        grep -qi '^Flags:.*Quorate' "$quorumtool_res_file"
+    fi
+
+    rm -f "$quorumtool_res_file"
+}
+
 ########
 # main #
 ########
@@ -71,7 +100,12 @@ test_corosync_qnetd_h
 
 test_qnetd_start
 test_corosync_start
+
+test_corosync_quorumtool "no"
+
 test_qdevice_start
+
+#test_corosync_quorumtool "yes"
 
 test_qdevice_stop
 test_corosync_stop
