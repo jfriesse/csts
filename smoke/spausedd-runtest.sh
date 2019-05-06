@@ -38,6 +38,8 @@ service_start() {
 
 # service_stop service
 service_stop() {
+    systemctl is-active "$1" || exit 1
+
     systemctl stop "$1"
 
     systemctl is-active "$1" && exit 1 || true
