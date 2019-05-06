@@ -33,6 +33,7 @@ PREFIX="/"
 COROSYNC_SYSCONFD="${PREFIX}etc/corosync"
 COROSYNC_CONF="${COROSYNC_SYSCONFD}/corosync.conf"
 COROSYNC_AUTHKEY="${COROSYNC_SYSCONFD}/authkey"
+COROSYNC_CLUSTER_NAME="smoketestcluster"
 
 TOKEN_TIMEOUT=1000
 
@@ -49,9 +50,10 @@ get_ip() {
     echo "$addr"
 }
 
-# generate_corosync_conf crypto [token]
+# generate_corosync_conf crypto [token] [qdevice]
 # crypto can be on or off
 # when token is defined it is used for token timeout
+# when qdevice is set to on qdevice section is created and second node is added
 generate_corosync_conf() {
     case "$1" in
     "on")
@@ -71,11 +73,13 @@ generate_corosync_conf() {
     if [ ! -z "$2" ];then
         token="$2"
     fi
+    qdevice="$3"
+    true_command=`which true`
 
 cat << _EOF_
     totem {
         version: 2
-        cluster_name: smoketestcluster
+        cluster_name: $COROSYNC_CLUSTER_NAME
         transport: knet
         crypto_cipher: $cipher
         crypto_hash: $hash
@@ -90,6 +94,27 @@ cat << _EOF_
 
     quorum {
         provider: corosync_votequorum
+_EOF_
+
+    if [ "$qdevice" == "on" ];then
+cat << _EOF_
+        device {
+            votes: 1
+            model: net
+            net {
+                host: $LOCAL_IP
+                algorithm: ffsplit
+            }
+            heuristics {
+                mode: sync
+                exec_true: $true_command
+            }
+        }
+_EOF_
+    fi
+
+
+cat << _EOF_
     }
 
     nodelist {
@@ -97,6 +122,18 @@ cat << _EOF_
             nodeid: 1
             ring0_addr: $LOCAL_IP
         }
+_EOF_
+
+    if [ "$qdevice" == "on" ];then
+cat << _EOF_
+        node {
+            nodeid: 2
+            ring0_addr: 192.0.2.2
+        }
+_EOF_
+    fi
+
+cat << _EOF_
     }
 _EOF_
 }

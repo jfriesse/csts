@@ -1,3 +1,4 @@
-corosync-runtest.sh
 corosync-api-test
 corosync-api-test-mp
+corosync-qdevice-runtest.sh
+corosync-runtest.sh

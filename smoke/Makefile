@@ -1,6 +1,6 @@
 C_APPS = corosync-api-test corosync-api-test-mp
 
-all: corosync-runtest.sh
+all: corosync-runtest.sh corosync-qdevice-runtest.sh
 
 corosync-api-test: corosync-api-test.c
 	$(CC) -ggdb -Wall `pkg-config --cflags libcpg` $< `pkg-config --libs libcpg` -o $@
@@ -19,6 +19,9 @@ corosync-runtest.sh: common.inc.sh corosync-tests.inc.sh $(C_APPS)
 	done
 
 	cat corosync-tests.inc.sh >> $@
+
+corosync-qdevice-runtest.sh: common.inc.sh corosync-qdevice-tests.inc.sh
+	cat common.inc.sh corosync-qdevice-tests.inc.sh > $@
 
 clean:
 	rm -f corosync-runtest.sh corosync-api-test corosync-api-test-mp

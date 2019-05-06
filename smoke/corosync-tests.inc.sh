@@ -23,7 +23,8 @@ test_corosync_keygen() {
 # test_corosync_start crypto
 # crypto can be on or off
 test_corosync_start() {
-    generate_corosync_conf "$1" | tee "$COROSYNC_CONF"
+    generate_corosync_conf "$1" > "$COROSYNC_CONF"
+    cat "$COROSYNC_CONF"
 
     service_start "corosync"
 }
@@ -83,7 +84,8 @@ test_corosync_reload() {
 
     # Generate new corosync.conf with token_timeout*10
     new_token_timeout=$((TOKEN_TIMEOUT*10))
-    generate_corosync_conf "off" "$new_token_timeout" | tee "$COROSYNC_CONF"
+    generate_corosync_conf "off" "$new_token_timeout" > "$COROSYNC_CONF"
+    cat "$COROSYNC_CONF"
 
     # Main call of the test
     corosync-cfgtool -R
