@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Copyright (c) 2019, Red Hat, Inc.
 #
 # Permission to use, copy, modify, and/or distribute this software for any
