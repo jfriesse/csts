@@ -85,6 +85,53 @@ test_corosync_quorumtool() {
     rm -f "$quorumtool_res_file"
 }
 
+# Test corosync-qdevice-tool by waiting for connected state and
+# checking heuristics results
+test_qdevice_tool() {
+    qdevice_tool_res_file=`mktemp`
+
+    cont=true
+
+    while $cont;do
+        corosync-qdevice-tool -s | tee "$qdevice_tool_res_file"
+
+        if grep -qi '^State:.*Connected' "$qdevice_tool_res_file";then
+            cont=false
+        else
+            sleep 1
+        fi
+    done
+
+    corosync-qdevice-tool -sv | tee "$qdevice_tool_res_file"
+    grep -qi '^Heuristics result:.*Pass ' "$qdevice_tool_res_file"
+
+    rm -f "$qdevice_tool_res_file"
+}
+
+# Test qnetd tool -s (check connected clients/clusters) and -l
+# (check node id, membership and heuristics)
+test_qnetd_tool() {
+    qnetd_tool_res_file=`mktemp`
+
+    corosync-qnetd-tool -s | tee "$qnetd_tool_res_file"
+
+    grep -qi '^Connected clients:.*1$' "$qnetd_tool_res_file"
+    grep -qi '^Connected clusters:.*1$' "$qnetd_tool_res_file"
+
+    corosync-qnetd-tool -sv | tee "$qnetd_tool_res_file"
+
+    corosync-qnetd-tool -l | tee "$qnetd_tool_res_file"
+
+    grep -qi "^Cluster \"$COROSYNC_CLUSTER_NAME\":\$" "$qnetd_tool_res_file"
+    grep -qi 'Node ID 1:$' "$qnetd_tool_res_file"
+    grep -qi 'Membership node list:.*1$' "$qnetd_tool_res_file"
+    grep -qi 'Heuristics:.*Pass$' "$qnetd_tool_res_file"
+
+    corosync-qnetd-tool -lv | tee "$qnetd_tool_res_file"
+
+    rm -f "$qnetd_tool_res_file" "$qnetd_tool_res_file"
+}
+
 ########
 # main #
 ########
@@ -96,7 +143,7 @@ fi
 test_corosync_qdevice_h
 test_corosync_qnetd_h
 
-#test_crt_creation
+test_crt_creation
 
 test_qnetd_start
 test_corosync_start
@@ -105,7 +152,9 @@ test_corosync_quorumtool "no"
 
 test_qdevice_start
 
-#test_corosync_quorumtool "yes"
+test_qdevice_tool
+test_qnetd_tool
+test_corosync_quorumtool "yes"
 
 test_qdevice_stop
 test_corosync_stop
