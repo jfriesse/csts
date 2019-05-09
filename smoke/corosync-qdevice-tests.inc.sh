@@ -91,6 +91,7 @@ test_qdevice_tool() {
     qdevice_tool_res_file=`mktemp`
 
     cont=true
+    repeats=0
 
     while $cont;do
         corosync-qdevice-tool -s | tee "$qdevice_tool_res_file"
@@ -98,6 +99,9 @@ test_qdevice_tool() {
         if grep -qi '^State:.*Connected' "$qdevice_tool_res_file";then
             cont=false
         else
+            repeats=$((repeats+1))
+            [ "$repeats" -le "$MAX_REPEATS" ]
+
             sleep 1
         fi
     done

@@ -34,6 +34,7 @@ COROSYNC_AUTHKEY="${COROSYNC_SYSCONFD}/authkey"
 COROSYNC_CLUSTER_NAME="smoketestcluster"
 
 TOKEN_TIMEOUT=1000
+MAX_REPEATS=60
 
 ####################
 # Helper functions #
