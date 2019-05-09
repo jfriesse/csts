@@ -19,16 +19,14 @@ test_corosync_qnetd_h() {
 
 test_crt_creation() {
     # Erase old certificates
-    rm -rf "$COROSYNC_SYSCONFD/qdevice"
-    rm -rf "$COROSYNC_SYSCONFD/qnetd"
+    rm -rf "$COROSYNC_SYSCONFD/qdevice/net/nssdb"
+    rm -rf "$COROSYNC_SYSCONFD/qnetd/nssdb"
 
     corosync-qnetd-certutil -i
     corosync-qdevice-net-certutil -i -c "$COROSYNC_SYSCONFD/qnetd/nssdb/qnetd-cacert.crt"
     corosync-qdevice-net-certutil -r -n "$COROSYNC_CLUSTER_NAME"
     corosync-qnetd-certutil -s -c "$COROSYNC_SYSCONFD/qdevice/net/nssdb/qdevice-net-node.crq" -n "$COROSYNC_CLUSTER_NAME"
     corosync-qdevice-net-certutil -M -c "$COROSYNC_SYSCONFD/qnetd/nssdb/cluster-$COROSYNC_CLUSTER_NAME.crt"
-
-    chown -R coroqnetd:coroqnetd "$COROSYNC_SYSCONFD/qnetd/" || true
 }
 
 test_qnetd_start() {
