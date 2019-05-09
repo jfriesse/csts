@@ -25,6 +25,9 @@ set -o pipefail
 # Variables changing test behavior
 MAX_REPEATS=60
 
+# Start of the test (for journalctl)
+JOURNAL_DATE_SINCE=$(date +"%F %T")
+
 ####################
 # Helper functions #
 ####################
@@ -48,6 +51,24 @@ service_stop() {
     systemctl is-active "$1" && exit 1 || true
 }
 
+# wait_for_log_msg message
+wait_for_log_msg() {
+    cont=true
+    repeats=0
+
+    journalctl --since "$JOURNAL_DATE_SINCE" | cat
+
+    while $cont;do
+        if journalctl _SYSTEMD_UNIT=spausedd.service -o cat --since "$JOURNAL_DATE_SINCE" | grep "$1";then
+            cont=false
+        else
+            sleep 1
+            repeats=$((repeats+1))
+            [ "$repeats" -le "$MAX_REPEATS" ]
+        fi
+    done
+}
+
 ##################
 # Test functions #
 ##################
@@ -60,17 +81,16 @@ test_spausedd_h() {
 
 test_spausedd_start() {
     service_start "spausedd"
+
+    wait_for_log_msg 'Running main poll loop with maximum timeout .* and steal threshold .*%'
 }
 
-# test_spausedd_stop journal_date_since
 test_spausedd_stop() {
     service_stop "spausedd"
 
-    journalctl _SYSTEMD_UNIT=spausedd.service -o cat --since="$1" | \
-        grep 'During .*s runtime spausedd was .*x not scheduled on time'
+    wait_for_log_msg 'During .*s runtime spausedd was .*x not scheduled on time'
 }
 
-# test_spausedd_stop journal_date_since
 test_sig_stop() {
     spausedd_pid=$(systemctl show spausedd -p "MainPID")
     spausedd_pid=${spausedd_pid##*=}
@@ -79,30 +99,16 @@ test_sig_stop() {
     sleep 5
     kill -CONT "$spausedd_pid"
 
-    cont=true
-    repeats=0
-
-    while $cont;do
-        if journalctl _SYSTEMD_UNIT=spausedd.service -o cat --since "$1" | \
-          grep 'Not scheduled for .*s (threshold is .*s), steal time is ';then
-            cont=false
-        else
-            sleep 1
-            repeats=$((repeats+1))
-            [ "$repeats" -le "$MAX_REPEATS" ]
-        fi
-    done
+    wait_for_log_msg 'Not scheduled for .*s (threshold is .*s), steal time is '
 }
 
 ########
 # main #
 ########
-journal_date_since=$(date +"%F %T")
-
 test_spausedd_h
 
 test_spausedd_start
 
-test_sig_stop "$journal_date_since"
+test_sig_stop
 
-test_spausedd_stop "$journal_date_since"
+test_spausedd_stop
