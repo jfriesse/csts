@@ -22,6 +22,9 @@
 set -xe
 set -o pipefail
 
+# Variables changing test behavior
+MAX_REPEATS=60
+
 ####################
 # Helper functions #
 ####################
@@ -76,8 +79,19 @@ test_sig_stop() {
     sleep 5
     kill -CONT "$spausedd_pid"
 
-    journalctl _SYSTEMD_UNIT=spausedd.service -o cat --since "$1" | \
-        grep 'Not scheduled for .*s (threshold is .*s), steal time is '
+    cont=true
+    repeats=0
+
+    while $cont;do
+        if journalctl _SYSTEMD_UNIT=spausedd.service -o cat --since "$1" | \
+          grep 'Not scheduled for .*s (threshold is .*s), steal time is ';then
+            cont=false
+        else
+            sleep 1
+            repeats=$((repeats+1))
+            [ "$repeats" -le "$MAX_REPEATS" ]
+        fi
+    done
 }
 
 ########
