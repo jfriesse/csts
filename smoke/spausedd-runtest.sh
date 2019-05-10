@@ -102,10 +102,15 @@ test_sig_stop() {
     wait_for_log_msg 'Not scheduled for .*s (threshold is .*s), steal time is '
 }
 
+test_man_page() {
+    man -w "spausedd"
+}
+
 ########
 # main #
 ########
 test_spausedd_h
+test_man_page
 
 test_spausedd_start
 
