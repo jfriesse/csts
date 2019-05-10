@@ -136,6 +136,16 @@ test_qnetd_tool() {
     rm -f "$qnetd_tool_res_file" "$qnetd_tool_res_file"
 }
 
+test_qdevice_qnetd_man_pages() {
+    # At least these man pages should be installed
+    expected_mp="corosync-qnetd corosync-qnetd-certutil corosync-qnetd-tool
+        corosync-qdevice corosync-qdevice-net-certutil corosync-qdevice-tool"
+
+    for mp in $expected_mp;do
+        man -w "$mp"
+    done
+}
+
 ########
 # main #
 ########
@@ -146,6 +156,8 @@ fi
 
 test_corosync_qdevice_h
 test_corosync_qnetd_h
+
+test_qdevice_qnetd_man_pages
 
 test_crt_creation
 
