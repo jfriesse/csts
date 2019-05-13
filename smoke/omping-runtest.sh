@@ -54,7 +54,17 @@ test_man_page() {
 }
 
 test_local_ping() {
-    omping -c 5 $(get_ip)
+    omping_res_file=`mktemp`
+    local_ip=$(get_ip)
+
+    omping -c 5 "$local_ip" | tee "$omping_res_file"
+
+    grep "$local_ip.*joined (S,G)" "$omping_res_file"
+    grep "$local_ip.*given amount of query messages was sent" "$omping_res_file"
+    grep "$local_ip.*unicast, xmt/rcv/%loss =.*min/avg/max/std-dev"  "$omping_res_file"
+    grep "$local_ip.*multicast, xmt/rcv/%loss =.*min/avg/max/std-dev" "$omping_res_file"
+
+    rm -f "$omping_res_file"
 }
 
 ########
