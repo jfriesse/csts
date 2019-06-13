@@ -24,6 +24,7 @@ set -o pipefail
 
 # Variables changing test behavior
 MAX_REPEATS=60
+SLEEP=5
 
 # Start of the test (for journalctl)
 JOURNAL_DATE_SINCE=$(date +"%F %T")
@@ -53,8 +54,8 @@ service_stop() {
 
 # wait_for_log_msg message
 wait_for_log_msg() {
-    cont=true
-    repeats=0
+    local cont=true
+    local repeats=0
 
     journalctl --since "$JOURNAL_DATE_SINCE" | cat
 
@@ -64,7 +65,7 @@ wait_for_log_msg() {
         else
             sleep 1
             repeats=$((repeats+1))
-            [ "$repeats" -le "$MAX_REPEATS" ]
+            [ "$repeats" -le "$MAX_REPEATS" ] || return 1
         fi
     done
 }
@@ -92,14 +93,27 @@ test_spausedd_stop() {
 }
 
 test_sig_stop() {
+    local cont=true
+    local repeats=0
+
     spausedd_pid=$(systemctl show spausedd -p "MainPID")
     spausedd_pid=${spausedd_pid##*=}
 
-    kill -STOP "$spausedd_pid"
-    sleep 5
-    kill -CONT "$spausedd_pid"
+    while $cont;do
+        # Wait a while for full start
+        sleep $SLEEP
 
-    wait_for_log_msg 'Not scheduled for .*s (threshold is .*s), steal time is '
+        kill -STOP "$spausedd_pid"
+        sleep $SLEEP
+        kill -CONT "$spausedd_pid"
+
+        if wait_for_log_msg 'Not scheduled for .*s (threshold is .*s), steal time is ';then
+            cont=false
+        else
+            repeats=$((repeats+1))
+            [ "$repeats" -le "$MAX_REPEATS" ]
+        fi
+    done
 }
 
 test_man_page() {
