@@ -60,7 +60,7 @@ wait_for_log_msg() {
     journalctl --since "$JOURNAL_DATE_SINCE" | cat
 
     while $cont;do
-        if journalctl _SYSTEMD_UNIT=spausedd.service -o cat --since "$JOURNAL_DATE_SINCE" | grep "$1";then
+        if journalctl -t "spausedd" -o cat --since "$JOURNAL_DATE_SINCE" | grep "$1";then
             cont=false
         else
             sleep 1
