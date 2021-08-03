@@ -7,7 +7,7 @@ all: $(ALL-VERSION-INDEPENDENT) cmap-tests sam-tests
 all-flatiron: $(ALL-VERSION-INDEPENDENT) confdb-tests
 
 CMAP-TESTS-BIN = cmap-getset cmap-incdec cmap-iter cmap-memleak
-cmap-tests: $(CMAP-TESTS_BIN)
+cmap-tests: $(CMAP-TESTS-BIN)
 
 CONFDB-TESTS-BIN = confdb-getset confdb-incdec confdb-iter confdb-memleak confdb-track-and-change
 confdb-tests: $(CONFDB-TESTS-BIN)
