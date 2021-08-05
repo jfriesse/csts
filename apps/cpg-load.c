@@ -99,20 +99,20 @@ void fill_data(unsigned char *data, uint32_t data_len)
 	}
 }
 
-void generate_msg(struct my_msg *msg, unsigned char *data, uint32_t data_len, int refill_data)
+void generate_msg(struct my_msg *msg, unsigned char *data, uint32_t min_msg_len, uint32_t max_msg_len, int refill_data)
 {
 
-        msg->seq_no = last_msg;
-	msg->data_len = rand() % (data_len + 1);
+	msg->seq_no = last_msg;
+	msg->data_len = min_msg_len + (rand() % (max_msg_len - min_msg_len + 1));
 
 	if (refill_data) {
-		fill_data(data, data_len);
+		fill_data(data, max_msg_len);
 	}
 
 	msg->chsum = compute_chsum(data, msg->data_len);
 }
 
-cs_error_t send_msg(cpg_handle_t handle, int refill_data, int max_msg_len)
+cs_error_t send_msg(cpg_handle_t handle, int refill_data, int min_msg_len, int max_msg_len)
 {
 	struct iovec iov[2];
 	static unsigned char data[MAX_MSG_LEN];
@@ -125,7 +125,7 @@ cs_error_t send_msg(cpg_handle_t handle, int refill_data, int max_msg_len)
 		init_data(data, sizeof(data));
 	}
 
-	generate_msg(&msg, data, max_msg_len, refill_data);
+	generate_msg(&msg, data, min_msg_len, max_msg_len, refill_data);
 	iov[0].iov_base = (void *)&msg;
 	iov[0].iov_len = sizeof(msg);
 	iov[1].iov_base = (void *)data;
@@ -144,7 +144,7 @@ cs_error_t send_msg(cpg_handle_t handle, int refill_data, int max_msg_len)
 	return (result);
 }
 
-void send_msgs(cpg_handle_t handle, int no_msgs, int max_msg_len)
+void send_msgs(cpg_handle_t handle, int no_msgs, int min_msg_len, int max_msg_len)
 {
 	int i;
 	int refill_data;
@@ -153,7 +153,7 @@ void send_msgs(cpg_handle_t handle, int no_msgs, int max_msg_len)
 	refill_data = 1;
 
 	for (i = 0; i < no_msgs; i++) {
-		err = send_msg(handle, refill_data, max_msg_len);
+		err = send_msg(handle, refill_data, min_msg_len, max_msg_len);
 		refill_data = 0;
 		if (err == CS_OK) {
 			last_msg++;
@@ -235,11 +235,6 @@ static cpg_model_v1_data_t model_data = {
 	.cpg_totem_confchg_fn =      NULL,
 };
 
-static void sigintr_handler (int signum) __attribute__((noreturn));
-static void sigintr_handler (int signum) {
-	exit (0);
-}
-
 static void usage(void)
 {
 	printf("Usage: [-q] [-m max_msgs] [-n num]\n");
@@ -247,6 +242,7 @@ static void usage(void)
 	printf(" -m max_msgs  Maximum messages to send and receive\n");
 	printf(" -n num       Number of messages in one burst\n");
 	printf(" -l msg_len   Maximum message length\n");
+	printf(" -L msg_len   Minimum message length\n");
 	printf("\n");
 	printf("Behaviour differs if -m is specified and if it's not.\n");
 	printf("Without -m, app runs forever and only startup errors are fatal.\n");
@@ -264,7 +260,7 @@ static void init_rand(void) {
 
 	f = fopen("/dev/urandom", "rb");
 	if (f != NULL) {
-		fread(&init_v, sizeof(init_v), 1, f);
+		if (fread(&init_v, sizeof(init_v), 1, f)) ; /* Ignore result */
 		fclose(f);
 	}
 	srand(init_v);
@@ -278,6 +274,7 @@ int main (int argc, char *argv[]) {
 	char *ep;
 	long num = 1;
 	long max_msg_len = 0;
+	long min_msg_len = 0;
 	int ch;
 	struct pollfd pfd;
 	int retries;
@@ -285,7 +282,7 @@ int main (int argc, char *argv[]) {
 	last_msg = 0;
 	last_expected = 0;
 
-	while ((ch = getopt(argc, argv, "qhl:m:n:")) != -1) {
+	while ((ch = getopt(argc, argv, "qhL:l:m:n:")) != -1) {
 		switch (ch) {
 		case 'q':
 			quiet = 1;
@@ -311,6 +308,13 @@ int main (int argc, char *argv[]) {
 				usage();
 			}
 			break;
+		case 'L':
+			min_msg_len = strtol(optarg, &ep, 10);
+			if (min_msg_len < 0 || *ep != '\0' || min_msg_len > MAX_MSG_LEN) {
+				warnx("illegal number, -L argument -- %s", optarg);
+				usage();
+			}
+			break;
 		case 'h':
 		case '?':
 		default:
@@ -319,11 +323,21 @@ int main (int argc, char *argv[]) {
 		}
 	}
 
+	if (max_msg_len != 0 && max_msg_len < min_msg_len) {
+		warnx("'Maximum message length' (%ld) has to be at least 'minimum message length' (%ld)",
+		    max_msg_len, min_msg_len);
+		usage();
+	}
+
 	if (max_msg_len == 0) {
 		max_msg_len = 16368 * 1100 / num;
 		if (max_msg_len > MAX_MSG_LEN) {
 			max_msg_len = MAX_MSG_LEN;
 		}
+	}
+
+	if (max_msg_len < min_msg_len) {
+		max_msg_len = min_msg_len;
 	}
 
 	strcpy(group_name.value, "CPGLOAD");
@@ -371,7 +385,7 @@ int main (int argc, char *argv[]) {
 		}
 
 		if (last_expected == last_msg) {
-			send_msgs(handle, num, max_msg_len);
+			send_msgs(handle, num, min_msg_len, max_msg_len);
 		}
 
 		if (result == 1 && pfd.revents & POLLIN) {
