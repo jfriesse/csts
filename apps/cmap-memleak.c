@@ -14,7 +14,6 @@ keys_create(cmap_handle_t handle, int oper)
 	int c1, c2, c3, c4;
 	char obj_name[16];
 	uint32_t u32;
-	hdb_handle_t new_obj_handle;
 	char str[128];
 	int i;
 	char key_name[CMAP_KEYNAME_MAXLEN + 1];

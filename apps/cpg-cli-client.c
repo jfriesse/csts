@@ -398,13 +398,6 @@ static cpg_model_v1_data_t model_data = {
 	.flags =                     CPG_MODEL_V1_DELIVER_INITIAL_TOTEM_CONF,
 };
 
-static void sigintr_handler(int signum) __attribute__((noreturn));
-
-static void
-sigintr_handler(int signum) {
-	exit (0);
-}
-
 static void
 usage() {
 
@@ -423,7 +416,7 @@ init_rand(void) {
 
 	f = fopen("/dev/urandom", "rb");
 	if (f != NULL) {
-		fread(&init_v, sizeof(init_v), 1, f);
+		if (fread(&init_v, sizeof(init_v), 1, f)) ; /* Ignore result */
 		fclose(f);
 	}
 	srand(init_v);

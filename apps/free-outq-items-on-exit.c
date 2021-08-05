@@ -101,7 +101,7 @@ int main (int argc, char *argv[]) {
 		do {
 			printf("Enter EXIT to exit\n");
 			fflush(stdout);
-			fgets(str, sizeof(str), stdin);
+			if (fgets(str, sizeof(str), stdin)) ; /* Ignore result */
 		} while (strncmp(str, "EXIT", 4) != 0);
 	}
 	result = cpg_finalize (handle);

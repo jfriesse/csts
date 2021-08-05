@@ -239,11 +239,6 @@ static cpg_model_v1_data_t model_data = {
 	.flags =                     CPG_MODEL_V1_DELIVER_INITIAL_TOTEM_CONF,
 };
 
-static void sigintr_handler (int signum) __attribute__((noreturn));
-static void sigintr_handler (int signum) {
-	exit (0);
-}
-
 int main (int argc, char *argv[]) {
 	cpg_handle_t handle;
 	fd_set read_fds;

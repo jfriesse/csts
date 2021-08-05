@@ -97,7 +97,7 @@ sam_test7 (void) {
 	}
 
 	if (expected_votes != 1) {
-		printf ("Expected_votes is not 1. Test skipped\n", err);
+		printf ("Expected_votes is not 1. Test skipped\n");
 		return (1);
 	}
 

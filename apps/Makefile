@@ -1,5 +1,6 @@
 .PHONY: all all-flatiron cmap-tests confdb-tests cpg-tests utils sam-tests clean
 
+CFLAGS += -Wall -Wshadow -Wp,-D_FORTIFY_SOURCE=2 -g -O
 ALL-VERSION-INDEPENDENT = cpg-tests utils
 
 all: $(ALL-VERSION-INDEPENDENT) cmap-tests sam-tests

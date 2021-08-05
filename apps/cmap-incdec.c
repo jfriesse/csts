@@ -10,7 +10,6 @@
 static void
 keys_delete(cmap_handle_t handle)
 {
-	cmap_value_types_t type;
 
 	assert(cmap_delete(handle, "testobj.testkeyi8") == CS_OK);
 	assert(cmap_delete(handle, "testobj.testkeyu8") == CS_OK);
